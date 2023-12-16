@@ -1,22 +1,22 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include "parser.h"
+#include "recursive_parser.h"
 
 static const char *s = NULL;
 static int p = 0;
 
-int get_G(const char *str)
+struct B_tree_node *get_G(const char *str)
 {
 	s = str;
 	p = 0;
-	int val = get_E();
+	struct B_tree_node *val = get_E();
 	syn_assert(s[p] == '\0', __LINE__);
 	return val;
 }
 
-int get_N()
+struct B_tree_node *get_N()
 {
-	int val = 0;
+	btr_elem_t val = 0;
 	int old_p = p;
 
 	while('0' <= s[p] && s[p] <= '9')
@@ -28,30 +28,30 @@ int get_N()
 
 	syn_assert(p > old_p, __LINE__);
 
-	return val;
+	return create_node(NUM, {.num_value = val}, NULL, NULL).new_node;
 }
 
-int get_E()
+struct B_tree_node *get_E()
 {
-	int val = get_T();
+	struct B_tree_node *val = get_T();
 	while(s[p] == '+' || s[p] == '-')
 	{
 		char op = s[p];
 
 		p++;
 
-		int val_2 = get_T();
+		struct B_tree_node *val_2 = get_T();
 
 		switch(op)
 		{
 			case '+':
 			{
-				val += val_2;
+				val = create_node(OP, {.op_value = ADD}, val, val_2).new_node;
 				break;
 			}
 			case '-':
 			{
-				val -= val_2;
+				val = create_node(OP, {.op_value = SUB}, val, val_2).new_node;
 				break;
 			}
 			default:
@@ -64,27 +64,27 @@ int get_E()
 	return val;
 }
 
-int get_T()
+struct B_tree_node *get_T()
 {
-	int val = get_P();
+	struct B_tree_node *val = get_P();
 	while(s[p] == '*' || s[p] == '/')
 	{
 		char op = s[p];
 
 		p++;
 
-		int val_2 = get_P();
+		struct B_tree_node *val_2 = get_P();
 
 		switch(op)
 		{
 			case '*':
 			{
-				val *= val_2;
+				val = create_node(OP, {.op_value = MUL}, val, val_2).new_node;
 				break;
 			}
 			case '/':
 			{
-				val /= val_2;
+				val = create_node(OP, {.op_value = DIV}, val, val_2).new_node;
 				break;
 			}
 			default:
@@ -97,13 +97,12 @@ int get_T()
 	return val;
 }
 
-int get_P()
+struct B_tree_node *get_P()
 {
 	if(s[p] == '(')
 	{
-		int val = 0;
 		p++;
-		val = get_E();
+		struct B_tree_node *val = get_E();
 		syn_assert(s[p] == ')', __LINE__);
 		p++;
 		return val;

@@ -22,8 +22,8 @@ FLAGS = -D _DEBUG -ggdb3 \
 
 LINK_FLAGS = -fsanitize=address,alignment,bool,bounds,enum,float-cast-overflow,float-divide-by-zero,integer-divide-by-zero,nonnull-attribute,null,return,returns-nonnull-attribute,shift,signed-integer-overflow,undefined,unreachable,vla-bound,vptr
 
-$(TARGET_1): $(PREF_DIF_OBJ)main.o $(PREF_DIF_OBJ)differentiator.o $(PREF_DIF_OBJ)differentiator_secondary.o $(B_TREE_OBJ)b_tree.o $(B_TREE_OBJ)b_tree_secondary.o
-	@ $(CC) $(LINK_FLAGS) $(PREF_DIF_OBJ)main.o $(PREF_DIF_OBJ)differentiator.o $(PREF_DIF_OBJ)differentiator_secondary.o $(B_TREE_OBJ)b_tree.o $(B_TREE_OBJ)b_tree_secondary.o -o $(TARGET_1)
+$(TARGET_1): $(PREF_DIF_OBJ)main.o $(PREF_DIF_OBJ)differentiator.o $(PREF_DIF_OBJ)differentiator_secondary.o $(B_TREE_OBJ)b_tree.o $(B_TREE_OBJ)b_tree_secondary.o $(PARS_OBJ)recursive_parser.o
+	@ $(CC) $(LINK_FLAGS) $(PREF_DIF_OBJ)main.o $(PREF_DIF_OBJ)differentiator.o $(PREF_DIF_OBJ)differentiator_secondary.o $(B_TREE_OBJ)b_tree.o $(B_TREE_OBJ)b_tree_secondary.o $(PARS_OBJ)recursive_parser.o -o $(TARGET_1)
 
 $(PREF_DIF_OBJ)main.o: $(PREF_DIF_SRC)main.cpp
 	@ $(CC) -c $(PREF_DIF_SRC)main.cpp -o $(PREF_DIF_OBJ)main.o $(FLAGS)

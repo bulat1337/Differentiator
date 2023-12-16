@@ -8,6 +8,8 @@
 
 typedef double btr_elem_t;
 
+#define GR_DUMP_CODE_GEN(root) gr_dump_code_gen(root, #root);
+
 enum Err_ID
 {
 	ALL_GOOD 		         = 0,
@@ -45,6 +47,7 @@ union Node_value
 {
 	double   num_value;
 	enum Ops op_value;
+	char *	 var_value;
 };
 
 struct B_tree_node
@@ -69,19 +72,35 @@ struct Gr_dump_code_gen_result
 
 struct node_charachteristics
 {
-	char *name;
-	char *color;
+	const char *name;
+	const char *color;
 	char *label;
 };
 
+struct Create_expression_result
+{
+	error_t error_code;
+	FILE *expression;
+};
+
 const size_t NODE_LABEL_STR_SIZE  = 100;
-const size_t op_token_size = 15;
+const size_t op_token_size 		  = 15;
+const size_t gr_dump_gen_cmd_size = 100;
+
+const char * const PASTEL_GREEN = "#9AFF55";
+const char * const LIGHT_GREEN = "#D7FF25";
+const char * const CORAL_PINK = "#F08080";
+const char * const MARGENGO = "#48565D";
 
 
-struct Create_node_result create_node(enum Node_type type, union Node_value);
+struct Create_node_result create_node(enum Node_type type, union Node_value value,
+									  struct B_tree_node *left_child,
+									  struct B_tree_node *right_child);
 error_t add_child(struct B_tree_node *parent, struct B_tree_node *child, bool is_right_child);
 error_t destroy_subtree(struct B_tree_node *parent_node, bool is_right_child);
-struct Gr_dump_code_gen_result gr_dump_code_gen(struct B_tree_node *root);
+struct Gr_dump_code_gen_result gr_dump_code_gen(struct B_tree_node *root, const char *b_tree_name);
+error_t b_tree_console_dump(struct B_tree_node *root);
+
 
 
 #endif
