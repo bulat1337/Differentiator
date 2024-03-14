@@ -1,0 +1,5 @@
+#!/bin/bash
+make clean
+make
+../executables/dif.out
+dot -Tpng node_1 -o node_1.png -Gdpi=100

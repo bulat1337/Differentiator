@@ -2,28 +2,30 @@
 #include "differentiator_secondary.h"
 
 #define PUT_PARENTHESIS_COND\
-	  !((node->type == NUM) || 															\
-	  	(node->type == VAR) ||		 													\
-	   ((parent->type == OP) &&															\
-	        ((parent->value.op_value == ADD) || (parent->value.op_value == SUB))		\
-			&& (node->type == OP) &&													\
-			((node->value.op_value == MUL) ||											\
-				(node->value.op_value == DIV) ||										\
-				(node->value.op_value == POW))) ||										\
-		((parent->type == OP) && (parent->value.op_value == DO_NOTHING)))				\
+		(	(parent->type == OP) && (parent->value.op_value == LN)	) ||				\
+		!(	(node->type == NUM) || 														\
+	  		(node->type == VAR) ||		 												\
+	    	(	(	(node->type == OP) &&												\
+						(	(node->value.op_value == MUL) ||							\
+							(node->value.op_value == DIV)	)	) &&					\
+					!(	(parent->type == OP) &&											\
+						(parent->value.op_value == POW)	)	) ||						\
+	    	(	(node->type == OP) &&													\
+					(	(	node->value.op_value == POW	) ||							\
+						(	node->value.op_value == LN	)	)	) ||					\
+			(	(parent->type == OP) && (parent->value.op_value == DO_NOTHING)	)	)	\
 
 #define PUT_PARENTHESIS_COND_TEX\
-	  !((node->type == NUM) || 															\
-	  	(node->type == VAR) ||		 													\
-	   ((parent->type == OP) &&															\
-	        ((parent->value.op_value == ADD) || (parent->value.op_value == SUB))		\
-			&& (node->type == OP) &&													\
-			((node->value.op_value == MUL) ||											\
-				(node->value.op_value == DIV) ||										\
-				(node->value.op_value == POW))) ||										\
-		((parent->type == OP) && (parent->value.op_value == DO_NOTHING)) ||				\
-		((parent->type == OP) && (parent->value.op_value == POW)) ||					\
-		((parent->type == OP) && (parent->value.op_value == DIV)))						\
+		(	(parent->type == OP) && (parent->value.op_value == LN)	) ||				\
+	  	!(	(node->type == NUM) || 														\
+	  		(node->type == VAR) ||		 												\
+	  		(	(parent->type == OP) && (parent->value.op_value == POW)	) ||		 	\
+	   		(	(node->type == OP) &&													\
+				(	(node->value.op_value == MUL) ||									\
+					(node->value.op_value == DIV) ||									\
+					(node->value.op_value == LN) ||									\
+					(node->value.op_value == POW)	)	) ||							\
+			(	(parent->type == OP) && (parent->value.op_value == DO_NOTHING)	)	)	\
 
 int cmp_double(double first_double, double second_double)
 {
@@ -47,9 +49,9 @@ int cmp_double(double first_double, double second_double)
     }
 }
 
-void print_node(struct B_tree_node *parent, bool is_right_child, FILE *expression)
+void print_node(struct B_tree_node *parent, bool is_right_child, FILE *expression_file)
 {
-	#define WRITE_IN_EXPRESSION_FILE(...) fprintf(expression, __VA_ARGS__);
+	#define WRITE_IN_EXPRESSION_FILE(...) fprintf(expression_file, __VA_ARGS__);
 
 	struct B_tree_node *node = get_node(parent, is_right_child);
 
@@ -62,7 +64,8 @@ void print_node(struct B_tree_node *parent, bool is_right_child, FILE *expressio
 	{
     	WRITE_IN_EXPRESSION_FILE("( ");
 	}
-	print_node(node, false, expression);
+
+	print_node(node, LEFT_CHILD, expression_file);
 
 	switch(node->type)
 	{
@@ -92,7 +95,12 @@ void print_node(struct B_tree_node *parent, bool is_right_child, FILE *expressio
 				}
 				case POW:
 				{
-					WRITE_IN_EXPRESSION_FILE("^");
+					WRITE_IN_EXPRESSION_FILE("^ ");
+					break;
+				}
+				case LN:
+				{
+					WRITE_IN_EXPRESSION_FILE("ln");
 					break;
 				}
 				case DO_NOTHING:
@@ -101,7 +109,8 @@ void print_node(struct B_tree_node *parent, bool is_right_child, FILE *expressio
 				}
 				default:
 				{
-					fprintf(stderr, "Unknown operation in %s[%d]\n", __func__, __LINE__);
+					fprintf(stderr, "Unknown operation %d in %s[%d]\n",
+							node->value.op_value, __func__, __LINE__);
 				}
 			}
 
@@ -109,7 +118,7 @@ void print_node(struct B_tree_node *parent, bool is_right_child, FILE *expressio
 		}
 		case NUM:
 		{
-			WRITE_IN_EXPRESSION_FILE("%lf ", node->value.num_value);
+			WRITE_IN_EXPRESSION_FILE("%.2lf ", node->value.num_value);
 			break;
 		}
 		case VAR:
@@ -123,7 +132,7 @@ void print_node(struct B_tree_node *parent, bool is_right_child, FILE *expressio
 		}
 	}
 
-    print_node(node, true, expression);
+    print_node(node, RIGHT_CHILD, expression_file);
 
    	if(PUT_PARENTHESIS_COND)
 	{
@@ -165,9 +174,10 @@ void tex_node_print(struct B_tree_node *parent, bool is_right_child, FILE *expre
 		WRITE_IN_EXPRESSION_FILE("{");
 	}
 
-	if(!((node->type == OP) && (node->value.op_value == DIV)))
+	if(	!(	(node->type == OP) && (node->value.op_value == DIV)	) ||
+		!(	(node->type == OP) && (node->value.op_value == LN)	)	)
 	{
-		tex_node_print(node, false, expression);
+		tex_node_print(node, LEFT_CHILD, expression);
 	}
 
 	switch(node->type)
@@ -201,6 +211,11 @@ void tex_node_print(struct B_tree_node *parent, bool is_right_child, FILE *expre
 					WRITE_IN_EXPRESSION_FILE("^");
 					break;
 				}
+				case LN:
+				{
+					WRITE_IN_EXPRESSION_FILE("\\ln");
+					break;
+				}
 				case DO_NOTHING:
 				{
 					break;
@@ -232,16 +247,16 @@ void tex_node_print(struct B_tree_node *parent, bool is_right_child, FILE *expre
 	if((node->type == OP) && (node->value.op_value == DIV))
 	{
 		WRITE_IN_EXPRESSION_FILE("{");
-		tex_node_print(node, false, expression);
+		tex_node_print(node, LEFT_CHILD, expression);
 		WRITE_IN_EXPRESSION_FILE("}");
 
 		WRITE_IN_EXPRESSION_FILE("{");
-		tex_node_print(node, true, expression);
+		tex_node_print(node, RIGHT_CHILD, expression);
 		WRITE_IN_EXPRESSION_FILE("}");
 	}
 	else
 	{
-    	tex_node_print(node, true, expression);
+    	tex_node_print(node, RIGHT_CHILD, expression);
 	}
 
 

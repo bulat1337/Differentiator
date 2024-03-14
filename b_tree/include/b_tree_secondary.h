@@ -1,0 +1,31 @@
+#ifndef B_TREE_SECONDARY_H
+#define B_TREE_SECONDARY_H
+
+#include "b_tree.h"
+
+const unsigned char ADDITIONAL_CONCATENATION_SPACE = 2;
+
+void         node_delete           (B_tree_node *node);
+
+void         gr_dump_connect_nodes (B_tree_node *node, FILE *graphic_dump_code_file_ptr);
+
+void         txt_dump_node         (B_tree_node *node, FILE *console_dump_file);
+
+B_tree_node *allocate_node_memory  (void);
+
+error_t      deallocate_node_memory(B_tree_node *node);
+
+error_t      print_regular_nodes   (B_tree_node *node, Node_charachteristics *nd_description,
+							        FILE *graphic_dump_code_file_ptr);
+
+error_t      dump_node             (B_tree_node *node, Node_charachteristics *nd_description,
+				                    FILE *graphic_dump_code_file_ptr);
+
+error_t      gr_dump_node          (B_tree_node *node, Node_charachteristics *nd_description,
+					                FILE *graphic_dump_code_file_ptr);
+
+char        *get_operation_token   (enum Ops op_type);
+
+char        *create_file_name      (const char *name, const char *postfix);
+
+#endif

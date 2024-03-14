@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+
 #include "recursive_parser.h"
 
 static const char *s = NULL;
@@ -28,7 +29,7 @@ struct B_tree_node *get_N()
 
 	syn_assert(p > old_p, __LINE__);
 
-	return create_node(NUM, {.num_value = val}, NULL, NULL).new_node;
+	return create_node(NUM, {.num_value = val}, NULL, NULL).arg.node;
 }
 
 struct B_tree_node *get_E()
@@ -46,12 +47,12 @@ struct B_tree_node *get_E()
 		{
 			case '+':
 			{
-				val = create_node(OP, {.op_value = ADD}, val, val_2).new_node;
+				val = create_node(OP, {.op_value = ADD}, val, val_2).arg.node;
 				break;
 			}
 			case '-':
 			{
-				val = create_node(OP, {.op_value = SUB}, val, val_2).new_node;
+				val = create_node(OP, {.op_value = SUB}, val, val_2).arg.node;
 				break;
 			}
 			default:
@@ -79,12 +80,12 @@ struct B_tree_node *get_T()
 		{
 			case '*':
 			{
-				val = create_node(OP, {.op_value = MUL}, val, val_2).new_node;
+				val = create_node(OP, {.op_value = MUL}, val, val_2).arg.node;
 				break;
 			}
 			case '/':
 			{
-				val = create_node(OP, {.op_value = DIV}, val, val_2).new_node;
+				val = create_node(OP, {.op_value = DIV}, val, val_2).arg.node;
 				break;
 			}
 			default:

@@ -1,5 +1,8 @@
 #include "b_tree_secondary.h"
 
+#define LEN(str)\
+	sizeof(str) / sizeof(char)
+
 void node_delete(struct B_tree_node *node)
 {
 	if(node == NULL)
@@ -10,15 +13,15 @@ void node_delete(struct B_tree_node *node)
 	node_delete(node->left);
 	node_delete(node->right);
 
-	deallocate_memory(node);
+	deallocate_node_memory(node);
 }
 
-struct B_tree_node *allocate_memory(void)
+struct B_tree_node *allocate_node_memory(void)
 {
 	return (struct B_tree_node *)calloc(1, sizeof(struct B_tree_node));
 }
 
-error_t deallocate_memory(struct B_tree_node *node)
+error_t deallocate_node_memory(struct B_tree_node *node)
 {
 	if(node == NULL)
 	{
@@ -32,23 +35,24 @@ error_t deallocate_memory(struct B_tree_node *node)
 }
 
 error_t print_regular_nodes(struct B_tree_node *node,
-						struct node_charachteristics *nd_description,
-						FILE *graphic_dump_code_file_ptr)
+							struct Node_charachteristics *nd_description,
+							FILE *graphic_dump_code_file_ptr)
 {
 	if(node == NULL)
 	{
 		return ALL_GOOD;
 	}
 
+	//fill_node_label
 	switch (node->type)
 	{
 		case NUM:
 		{
-			nd_description->color = "#2595FF";
+			nd_description->color = LIGHT_BLUE;
 
 			snprintf(nd_description->label, NODE_LABEL_STR_SIZE,
-					"{%p | {type: NUM | val: %.2lf} | {L: %p | R: %p}}",
-					node, node->value.num_value, node->left, node->right);
+					 "{%p | {type: NUM | val: %.2lf} | {L: %p | R: %p}}",
+					 node, node->value.num_value, node->left, node->right);
 			break;
 		}
 		case OP:
@@ -56,10 +60,11 @@ error_t print_regular_nodes(struct B_tree_node *node,
 			char *operation_token = get_operation_token(node->value.op_value);
 			if(operation_token == NULL)
 			{
+				//log_error
 				return UNABLE_TO_ALLOCATE;
 			}
 
-			nd_description->color = "#FF5555";
+			nd_description->color = RED_PINK;
 
 			snprintf(nd_description->label, NODE_LABEL_STR_SIZE,
 					"{%p | {type: OP | val: %s} | {L: %p | R: %p}}",
@@ -84,9 +89,7 @@ error_t print_regular_nodes(struct B_tree_node *node,
 		}
 	}
 
-
-
-	dump_node(node, nd_description, graphic_dump_code_file_ptr);
+	gr_dump_node(node, nd_description, graphic_dump_code_file_ptr);
 
 	print_regular_nodes(node->left,
 						nd_description,
@@ -98,7 +101,7 @@ error_t print_regular_nodes(struct B_tree_node *node,
 	return ALL_GOOD;
 }
 
-void connect_nodes(struct B_tree_node *node, FILE *graphic_dump_code_file_ptr)
+void gr_dump_connect_nodes(struct B_tree_node *node, FILE *graphic_dump_code_file_ptr)
 {
 	if(node == NULL)
 	{
@@ -109,14 +112,14 @@ void connect_nodes(struct B_tree_node *node, FILE *graphic_dump_code_file_ptr)
 	{
 		fprintf(graphic_dump_code_file_ptr, "%lu -> %lu\n", (unsigned long)node,
 															(unsigned long)node->left);
-		connect_nodes(node->left, graphic_dump_code_file_ptr);
+		gr_dump_connect_nodes(node->left, graphic_dump_code_file_ptr);
 	}
 
 	if(node->right != NULL)
 	{
 		fprintf(graphic_dump_code_file_ptr, "%lu -> %lu\n", (unsigned long)node,
 															(unsigned long)node->right);
-		connect_nodes(node->right, graphic_dump_code_file_ptr);
+		gr_dump_connect_nodes(node->right, graphic_dump_code_file_ptr);
 	}
 }
 
@@ -125,15 +128,14 @@ char *get_operation_token(enum Ops op_type)
 	#define CASE(op_type)\
 	case op_type:\
 	{\
-		strncpy(operation_token, #op_type, op_token_size);\
+		strncpy(operation_token, #op_type, OP_TOKEN_SIZE);\
 		return operation_token;\
 		break;\
 	}\
 
-	char *operation_token = (char *)calloc(op_token_size, sizeof(char));
+	char *operation_token = (char *)calloc(OP_TOKEN_SIZE, sizeof(char));
 	if(operation_token == NULL)
 	{
-		perror("Unable to allocate:");
 		return NULL;
 	}
 
@@ -145,9 +147,10 @@ char *get_operation_token(enum Ops op_type)
 		CASE(MUL)
 		CASE(DIV)
 		CASE(POW)
+		CASE(LN)
 		default:
 		{
-			strncpy(operation_token, "UNKNOWN", op_token_size);
+			strncpy(operation_token, "UNKNOWN", OP_TOKEN_SIZE);
 			return operation_token;
 			break;
 		}
@@ -156,17 +159,17 @@ char *get_operation_token(enum Ops op_type)
 	#undef CASE
 }
 
-error_t dump_node(struct B_tree_node *node, struct node_charachteristics *nd_description,
+error_t gr_dump_node(struct B_tree_node *node, struct Node_charachteristics *nd_description,
 					FILE *graphic_dump_code_file_ptr)
 {
 	fprintf(graphic_dump_code_file_ptr, "\t%lu [shape = Mrecord, "
-		"fillcolor = \"%s\", label = \"%s\" ];\n",
+			"fillcolor = \"%s\", label = \"%s\" ];\n",
 			(unsigned long)node, nd_description->color, nd_description->label);
 
 	return ALL_GOOD;
 }
 
-void node_consoole_dump(struct B_tree_node *node, FILE *console_dump_file)
+void txt_dump_node(struct B_tree_node *node, FILE *console_dump_file)
 {
 	#define DUMP(...) fprintf(console_dump_file, __VA_ARGS__);
 
@@ -181,18 +184,18 @@ void node_consoole_dump(struct B_tree_node *node, FILE *console_dump_file)
 	{
 		case NUM:
 		{
-			DUMP("                  NUM");
+			DUMP("          NUM");
 			DUMP("%18.2lf", node->value.num_value);
 			break;
 		}
 		case OP:
 		{
-			DUMP("                  OP");
+			DUMP("          OP");
 
 			#define CASE(OP_TYPE)\
 			case OP_TYPE:\
 			{\
-				DUMP("                  "#OP_TYPE);\
+				DUMP("                "#OP_TYPE);\
 				break;\
 			}
 
@@ -203,6 +206,7 @@ void node_consoole_dump(struct B_tree_node *node, FILE *console_dump_file)
 				CASE(MUL)
 				CASE(DIV)
 				CASE(POW)
+				CASE(LN)
 				CASE(DO_NOTHING)
 				default:
 				{
@@ -215,8 +219,8 @@ void node_consoole_dump(struct B_tree_node *node, FILE *console_dump_file)
 		}
 		case VAR:
 		{
-			DUMP("                  VAR");
-			DUMP("                  %s", node->value.var_value);
+			DUMP("          VAR");
+			DUMP("               %s", node->value.var_value);
 			break;
 		}
 		default:
@@ -225,11 +229,24 @@ void node_consoole_dump(struct B_tree_node *node, FILE *console_dump_file)
 		}
 	}
 
-	DUMP("%18.p", node->left);
+	DUMP("%27.p", node->left);
 	DUMP("%18.p", node->right);
 
 	DUMP("\n");
 
-	node_consoole_dump(node->left,  console_dump_file);
-	node_consoole_dump(node->right, console_dump_file);
+	txt_dump_node(node->left,  console_dump_file);
+	txt_dump_node(node->right, console_dump_file);
+}
+
+char *create_file_name(const char *name, const char *postfix)
+{
+	size_t byte_code_file_name_size =
+		strlen(postfix) + strlen(name) + ADDITIONAL_CONCATENATION_SPACE;
+
+	char *byte_code_file_name =
+		(char *)calloc(byte_code_file_name_size, sizeof(char));
+
+	snprintf(byte_code_file_name, byte_code_file_name_size, "%s_%s", name, postfix);
+
+	return byte_code_file_name;
 }

@@ -1,7 +1,7 @@
 #ifndef PARSER_H
 #define PARSER_H
 
-#include "../b_tree_src/b_tree.h"
+#include "b_tree.h"
 
 struct B_tree_node *get_G(const char *str);
 struct B_tree_node *get_N();

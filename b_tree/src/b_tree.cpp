@@ -1,42 +1,41 @@
 #include "b_tree.h"
 #include "b_tree_secondary.h"
 
-struct Create_node_result create_node(enum Node_type type, union Node_value value,
-									  struct B_tree_node *left_child,
-									  struct B_tree_node *right_child)
+Uni_ret create_node(Node_type type, Node_value value, B_tree_node *left_child,
+													  B_tree_node *right_child)
 {
-	struct Create_node_result result =
+	Uni_ret result =
 	{
-		.new_node = allocate_memory(),
+		.arg.node = allocate_node_memory(),
 		.error_code = ALL_GOOD,
 	};
 
-	if(result.new_node == NULL)
+	if(result.arg.node == NULL)
 	{
 		result.error_code = UNABLE_TO_ALLOCATE;
 		return result;
 	}
 
-	result.new_node->type = type;
+	result.arg.node->type  = type;
 
-	result.new_node->left  = left_child;
-	result.new_node->right = right_child;
+	result.arg.node->left  = left_child;
+	result.arg.node->right = right_child;
 
 	switch(type)
 	{
 		case NUM:
 		{
-			result.new_node->value.num_value = value.num_value;
+			result.arg.node->value.num_value = value.num_value;
 			break;
 		}
 		case OP:
 		{
-			result.new_node->value.op_value = value.op_value;
+			result.arg.node->value.op_value  = value.op_value;
 			break;
 		}
 		case VAR:
 		{
-			result.new_node->value.var_value = value.var_value;
+			result.arg.node->value.var_value = value.var_value;
 			break;
 		}
 		default:
@@ -62,7 +61,7 @@ error_t add_child(struct B_tree_node *parent, struct B_tree_node *child, bool is
 	}
 	else
 	{
-		parent->left = child;
+		parent->left  = child;
 	}
 
 	return ALL_GOOD;
@@ -87,19 +86,18 @@ error_t destroy_subtree(struct B_tree_node *parent_node, bool is_right_child)
 	}
 
 
-
 	return ALL_GOOD;
 }
 
-struct Gr_dump_code_gen_result gr_dump_code_gen(struct B_tree_node *root, const char *b_tree_name)
+Uni_ret gr_dump_code_gen(B_tree_node *root, const char *b_tree_name)
 {
-	struct Gr_dump_code_gen_result result =
+	Uni_ret result =
 	{
-		.error_code = ALL_GOOD,
-		.graphic_dump_code_file_ptr = fopen(b_tree_name, "w"),
+		.error_code   = ALL_GOOD,
+		.arg.file_ptr = fopen(b_tree_name, "w"),
 	};
 
-	if(result.graphic_dump_code_file_ptr == NULL)
+	if(result.arg.file_ptr == NULL) //macro + stderr -> log_file
 	{
 		fprintf(stderr, "Unable to open list_graphic_dump.dot\n");
 
@@ -107,7 +105,7 @@ struct Gr_dump_code_gen_result gr_dump_code_gen(struct B_tree_node *root, const 
 		return result;
 	}
 
-	#define WRITE_TO_DUMP_FILE(...) fprintf(result.graphic_dump_code_file_ptr, __VA_ARGS__);
+	#define WRITE_TO_DUMP_FILE(...) fprintf(result.arg.file_ptr, __VA_ARGS__);
 
 	WRITE_TO_DUMP_FILE("digraph BinaryTree {\n"
 	"bgcolor = \"%s\";\n"
@@ -118,7 +116,7 @@ struct Gr_dump_code_gen_result gr_dump_code_gen(struct B_tree_node *root, const 
 	"\theight = 3,\n"
 	"\tpenwidth = 5, color = \"white\"];\n", MARGENGO, CORAL_PINK);
 
-	struct node_charachteristics nd_description =
+	struct Node_charachteristics nd_description =
 	{
 		.color = CORAL_PINK,
 		.name = "node_",
@@ -128,7 +126,9 @@ struct Gr_dump_code_gen_result gr_dump_code_gen(struct B_tree_node *root, const 
 	if(nd_description.label == NULL)
 	{
 		fprintf(stderr, "Unable to allocate nd_description.label\n");
+
 		result.error_code = UNABLE_TO_ALLOCATE;
+
 		return result;
 	}
 
@@ -140,52 +140,55 @@ struct Gr_dump_code_gen_result gr_dump_code_gen(struct B_tree_node *root, const 
 
 	if(root != NULL)
 	{
-		result.error_code = print_regular_nodes(root,
-							&nd_description,
-							result.graphic_dump_code_file_ptr);
+		result.error_code = print_regular_nodes(root, &nd_description, result.arg.file_ptr);
 
 		if(result.error_code != ALL_GOOD)
 		{
 			free(nd_description.label);
-			fclose(result.graphic_dump_code_file_ptr);
+			fclose(result.arg.file_ptr);
 
 			return result;
 		}
 	}
 
-	connect_nodes(root, result.graphic_dump_code_file_ptr);
+	gr_dump_connect_nodes(root, result.arg.file_ptr);
 
 	WRITE_TO_DUMP_FILE("}");
 
 
+//why donesn't work \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
 
-	// char *gr_dump_gen_cmd = (char *)calloc(gr_dump_gen_cmd_size, sizeof(char));
+	// char *gr_dump_gen_cmd = (char *)calloc(GR_DUMP_GEN_CMD_SIZE, sizeof(char));
 	// if(gr_dump_gen_cmd == NULL)
 	// {
 	// 	result.error_code = UNABLE_TO_ALLOCATE;
 	// 	fprintf(stderr, "Unable to allocate\n");
 	// 	return result;
 	// }
-	// snprintf(gr_dump_gen_cmd, gr_dump_gen_cmd_size,
+	// snprintf(gr_dump_gen_cmd, GR_DUMP_GEN_CMD_SIZE,
 	// 	"dot -Tpng %s -o %s.png -Gdpi=100", b_tree_name, b_tree_name);
 	// system(gr_dump_gen_cmd);
+	// free(gr_dump_gen_cmd);
 
 
 
 	#undef WRITE_TO_DUMP_FILE
 
 	free(nd_description.label);
-	fclose(result.graphic_dump_code_file_ptr);
+	fclose(result.arg.file_ptr);
 
 	return result;
 }
 
-error_t b_tree_console_dump(struct B_tree_node *root)
+error_t txt_dump(struct B_tree_node *root, const char *name)
 {
-	#define DUMP(...) fprintf(console_dump_file, __VA_ARGS__);
+	#define DUMP(...) fprintf(dump_file, __VA_ARGS__);
 
-	FILE *console_dump_file = fopen("console_dump.txt", "w");
-	if(console_dump_file == NULL)
+	char *file_name = create_file_name(name, "dump.txt");
+
+	FILE *dump_file = fopen(file_name, "w");
+	free(file_name);
+	if(dump_file == NULL)
 	{
 		return UNABLE_TO_OPEN_FILE;
 	}
@@ -196,7 +199,7 @@ error_t b_tree_console_dump(struct B_tree_node *root)
 	DUMP("             left:");
 	DUMP("             right:\n");
 
-	node_consoole_dump(root, console_dump_file);
+	txt_dump_node(root, dump_file);
 
 	#undef DUMP
 
