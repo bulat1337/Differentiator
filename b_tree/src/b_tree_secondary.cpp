@@ -148,6 +148,8 @@ char *get_operation_token(enum Ops op_type)
 		CASE(DIV)
 		CASE(POW)
 		CASE(LN)
+		CASE(SIN)
+		CASE(COS)
 		default:
 		{
 			strncpy(operation_token, "UNKNOWN", OP_TOKEN_SIZE);
@@ -207,6 +209,8 @@ void txt_dump_node(struct B_tree_node *node, FILE *console_dump_file)
 				CASE(DIV)
 				CASE(POW)
 				CASE(LN)
+				CASE(SIN)
+				CASE(COS)
 				CASE(DO_NOTHING)
 				default:
 				{

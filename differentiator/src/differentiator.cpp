@@ -60,6 +60,14 @@ btr_elem_t eval(struct B_tree_node *node, struct Labels_w_len *labels_w_len)
 		{
 			return log(right_node_value);
 		}
+		case SIN:
+		{
+			return sin(right_node_value);
+		}
+		case COS:
+		{
+			return cos(right_node_value);
+		}
 		case DO_NOTHING:
 		{
 			return NAN;
@@ -182,7 +190,22 @@ struct B_tree_node *differentiate(struct B_tree_node *node)
 				}
 				case POW:
 				{
-					return ADD(MUL(MUL(cR, POW(cL, SUB(cR, ONE))), dL), MUL(MUL(POW(cL, cR), LN(cL)), dR));
+					B_tree_node *left_child  = MUL(MUL(cR, POW(cL, SUB(cR, ONE))), dL);
+					B_tree_node *right_child = MUL(MUL(POW(cL, cR), LN(cL)), dR);
+
+					return ADD(left_child, right_child);
+				}
+				case LN:
+				{
+					return MUL(DIV(ONE, cR), dR);
+				}
+				case SIN:
+				{
+					return MUL(COS(cR), dR);
+				}
+				case COS:
+				{
+					return MUL(SUB(ZERO, SIN(cR)), dR);
 				}
 				case DO_NOTHING:
 				{

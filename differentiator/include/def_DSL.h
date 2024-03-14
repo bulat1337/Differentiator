@@ -13,6 +13,9 @@
 #define cR\
 	node_copy(node->right)
 
+#define ZERO\
+	create_node(NUM, {.num_value = 0}, NULL, NULL).arg.node
+
 #define ONE\
 	create_node(NUM, {.num_value = 1}, NULL, NULL).arg.node
 
@@ -36,6 +39,12 @@
 
 #define LN(child)\
 	create_node(OP, {.op_value = LN}, NULL, child).arg.node
+
+#define SIN(child)\
+	create_node(OP, {.op_value = SIN}, NULL, child).arg.node
+
+#define COS(child)\
+	create_node(OP, {.op_value = COS}, NULL, child).arg.node
 
 
 #endif

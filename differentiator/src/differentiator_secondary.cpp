@@ -2,29 +2,42 @@
 #include "differentiator_secondary.h"
 
 #define PUT_PARENTHESIS_COND\
-		(	(parent->type == OP) && (parent->value.op_value == LN)	) ||				\
+		(	(parent->type == OP) &&														\
+			(	(parent->value.op_value == LN) ||										\
+				(parent->value.op_value == SIN) ||										\
+				(parent->value.op_value == COS)	)	) ||								\
 		!(	(node->type == NUM) || 														\
 	  		(node->type == VAR) ||		 												\
 	    	(	(	(node->type == OP) &&												\
 						(	(node->value.op_value == MUL) ||							\
+							(node->value.op_value == POW) ||							\
 							(node->value.op_value == DIV)	)	) &&					\
 					!(	(parent->type == OP) &&											\
 						(parent->value.op_value == POW)	)	) ||						\
 	    	(	(node->type == OP) &&													\
-					(	(	node->value.op_value == POW	) ||							\
-						(	node->value.op_value == LN	)	)	) ||					\
+				(	(node->value.op_value == LN) ||										\
+					(node->value.op_value == SIN) ||									\
+					(node->value.op_value == COS)	)	) ||							\
 			(	(parent->type == OP) && (parent->value.op_value == DO_NOTHING)	)	)	\
 
 #define PUT_PARENTHESIS_COND_TEX\
-		(	(parent->type == OP) && (parent->value.op_value == LN)	) ||				\
+		(	(parent->type == OP) &&														\
+			(	(parent->value.op_value == LN) ||										\
+				(parent->value.op_value == SIN) ||										\
+				(parent->value.op_value == COS)	)	) ||								\
 	  	!(	(node->type == NUM) || 														\
 	  		(node->type == VAR) ||		 												\
-	  		(	(parent->type == OP) && (parent->value.op_value == POW)	) ||		 	\
+	  		(	(parent->type == OP) &&													\
+				(parent->value.op_value == POW) &&										\
+				!(node->value.op_value == POW)	) ||		 							\
 	   		(	(node->type == OP) &&													\
 				(	(node->value.op_value == MUL) ||									\
 					(node->value.op_value == DIV) ||									\
-					(node->value.op_value == LN) ||									\
-					(node->value.op_value == POW)	)	) ||							\
+					(node->value.op_value == LN) ||										\
+					(node->value.op_value == SIN) ||									\
+					(node->value.op_value == COS) ||									\
+					(	(node->value.op_value == POW) &&								\
+						!(parent->value.op_value == POW)	)	)	) ||				\
 			(	(parent->type == OP) && (parent->value.op_value == DO_NOTHING)	)	)	\
 
 int cmp_double(double first_double, double second_double)
@@ -103,6 +116,16 @@ void print_node(struct B_tree_node *parent, bool is_right_child, FILE *expressio
 					WRITE_IN_EXPRESSION_FILE("ln");
 					break;
 				}
+				case SIN:
+				{
+					WRITE_IN_EXPRESSION_FILE("sin");
+					break;
+				}
+				case COS:
+				{
+					WRITE_IN_EXPRESSION_FILE("cos");
+					break;
+				}
 				case DO_NOTHING:
 				{
 					;
@@ -174,8 +197,8 @@ void tex_node_print(struct B_tree_node *parent, bool is_right_child, FILE *expre
 		WRITE_IN_EXPRESSION_FILE("{");
 	}
 
-	if(	!(	(node->type == OP) && (node->value.op_value == DIV)	) ||
-		!(	(node->type == OP) && (node->value.op_value == LN)	)	)
+	if(	!(	(	(node->type == OP) && (node->value.op_value == DIV)	) ||
+			(	(node->type == OP) && (node->value.op_value == LN)	)	)	)
 	{
 		tex_node_print(node, LEFT_CHILD, expression);
 	}
@@ -216,6 +239,16 @@ void tex_node_print(struct B_tree_node *parent, bool is_right_child, FILE *expre
 					WRITE_IN_EXPRESSION_FILE("\\ln");
 					break;
 				}
+				case SIN:
+				{
+					WRITE_IN_EXPRESSION_FILE("\\sin");
+					break;
+				}
+				case COS:
+				{
+					WRITE_IN_EXPRESSION_FILE("\\cos");
+					break;
+				}
 				case DO_NOTHING:
 				{
 					break;
@@ -244,7 +277,8 @@ void tex_node_print(struct B_tree_node *parent, bool is_right_child, FILE *expre
 		}
 	}
 
-	if((node->type == OP) && (node->value.op_value == DIV))
+	if(	(	(node->type == OP) && (node->value.op_value == DIV)	) ||
+		(	(node->type == OP) && (node->value.op_value == LN)	)	)
 	{
 		WRITE_IN_EXPRESSION_FILE("{");
 		tex_node_print(node, LEFT_CHILD, expression);
@@ -259,15 +293,14 @@ void tex_node_print(struct B_tree_node *parent, bool is_right_child, FILE *expre
     	tex_node_print(node, RIGHT_CHILD, expression);
 	}
 
+	if((parent->type == OP) && (parent->value.op_value == POW))
+	{
+		WRITE_IN_EXPRESSION_FILE("}");
+	}
 
 	if(PUT_PARENTHESIS_COND_TEX)
 	{
     	WRITE_IN_EXPRESSION_FILE(")");
-	}
-
-	if((parent->type == OP) && (parent->value.op_value == POW))
-	{
-		WRITE_IN_EXPRESSION_FILE("}");
 	}
 
 	#undef WRITE_IN_EXPRESSION_FILE

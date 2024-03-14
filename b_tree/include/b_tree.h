@@ -43,6 +43,8 @@ enum Ops
 	DIV        = 4,
 	POW        = 5,
 	LN         = 6,
+	SIN        = 7,
+	COS        = 8,
 };
 
 struct Node_value
