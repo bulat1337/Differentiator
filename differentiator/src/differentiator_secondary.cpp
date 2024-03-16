@@ -318,21 +318,3 @@ btr_elem_t get_var_value(const char *var_name, const struct Labels_w_len *labels
 
 	return NAN;
 }
-
-struct B_tree_node *node_copy(struct B_tree_node *node)
-{
-	struct B_tree_node *copy = (struct B_tree_node *)calloc(1, sizeof(struct B_tree_node));
-
-	if(copy == NULL)
-	{
-		fprintf(stderr, "Unable to allocate memory in %s", __func__);
-		return NULL;
-	}
-
-	copy->left = node->left;
-	copy->right = node->right;
-	copy->type = node->type;
-	copy->value = node->value;
-
-	return copy;
-}

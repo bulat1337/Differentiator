@@ -1,10 +1,5 @@
-PATH_TREE_OBJ = ../obj/b_tree_obj/
-PATH_TREE_SRC     = ./src/
-TREE_SRC = $(wildcard $(PATH_TREE_SRC)*.cpp)
-TREE_OBJ = $(patsubst $(PATH_TREE_SRC)%.cpp, $(PATH_TREE_OBJ)%.o, $(TREE_SRC))
-
 PATH_GLOBAL_OBJ = ../obj/global_obj/
-PATH_GLOBAL_SRC     = ../global/src/
+PATH_GLOBAL_SRC     = ./src/
 GLOBAL_SRC = $(wildcard $(PATH_GLOBAL_SRC)*.cpp)
 GLOBAL_OBJ = $(patsubst $(PATH_GLOBAL_SRC)%.cpp, $(PATH_GLOBAL_OBJ)%.o, $(GLOBAL_SRC))
 
@@ -28,13 +23,12 @@ FLAGS = -D _DEBUG -ggdb3 \
 
 LINK_FLAGS = -fsanitize=address,alignment,bool,bounds,enum,float-cast-overflow,float-divide-by-zero,integer-divide-by-zero,nonnull-attribute,null,return,returns-nonnull-attribute,shift,signed-integer-overflow,undefined,unreachable,vla-bound,vptr
 
-Include = -I./include/ -I../global/include/
+Include = -I./include/
 
-$(PATH_LIB)libb_tree.a: $(TREE_OBJ)
-	@ ar rvs $@ $(TREE_OBJ) $(GLOBAL_OBJ)
+all: $(GLOBAL_OBJ)
 
-$(PATH_TREE_OBJ)%.o: $(PATH_TREE_SRC)%.cpp
+$(PATH_GLOBAL_OBJ)%.o: $(PATH_GLOBAL_SRC)%.cpp
 	@ $(CC) -c $< -o $@ $(FLAGS) $(Include)
 
 clean:
-	@rm $(PATH_TREE_OBJ)*.o
+	@rm $(PATH_GLOBAL_OBJ)*.o

@@ -225,4 +225,27 @@ struct B_tree_node *differentiate(struct B_tree_node *node)
 	}
 }
 
+struct B_tree_node *node_copy(struct B_tree_node *node)
+{
+	if(node == NULL)
+	{
+		return NULL;
+	}
+
+	struct B_tree_node *copy = (struct B_tree_node *)calloc(1, sizeof(struct B_tree_node));
+
+	if(copy == NULL)
+	{
+		fprintf(stderr, "Unable to allocate memory in %s", __func__);
+		return NULL;
+	}
+
+	copy->left = node_copy(node->left);
+	copy->right = node_copy(node->right);
+	copy->type = node->type;
+	copy->value = node->value;
+
+	return copy;
+}
+
 #include "undef_DSL.h"

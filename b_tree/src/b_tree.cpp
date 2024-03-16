@@ -1,5 +1,6 @@
 #include "b_tree.h"
 #include "b_tree_secondary.h"
+#include "global.h"
 
 Uni_ret create_node(Node_type type, Node_value value, B_tree_node *left_child,
 													  B_tree_node *right_child)
@@ -91,11 +92,13 @@ error_t destroy_subtree(struct B_tree_node *parent_node, bool is_right_child)
 
 Uni_ret gr_dump_code_gen(B_tree_node *root, const char *b_tree_name)
 {
+	char *file_name = create_file_name(b_tree_name, ".dot");
 	Uni_ret result =
 	{
 		.error_code   = ALL_GOOD,
-		.arg.file_ptr = fopen(b_tree_name, "w"),
+		.arg.file_ptr = fopen(file_name, "w"),
 	};
+	free(file_name);
 
 	if(result.arg.file_ptr == NULL) //macro + stderr -> log_file
 	{
@@ -184,7 +187,7 @@ error_t txt_dump(struct B_tree_node *root, const char *name)
 {
 	#define DUMP(...) fprintf(dump_file, __VA_ARGS__);
 
-	char *file_name = create_file_name(name, "dump.txt");
+	char *file_name = create_file_name(name, "_dump.txt");
 
 	FILE *dump_file = fopen(file_name, "w");
 	free(file_name);

@@ -1,33 +1,109 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "recursive_parser.h"
+#include "recursive_parser_secondary.h"
 
-static const char *s = NULL;
-static int p = 0;
+#define SYNTAX_CHECK(cond)												\
+	if(!(cond))															\
+	{																	\
+		PARSE_LOG("Syntax ERROR on %d: "#cond" is fasle\n", __LINE__);	\
+		PARSE_LOG("%s returning NULL\n", __func__);						\
+		return NULL;													\
+	}
 
-struct B_tree_node *get_G(const char *str)
+#define REPORT_ERROR(...)							\
+	PARSE_LOG(__VA_ARGS__);							\
+	PARSE_LOG("%s returning NULL\n", __func__);		\
+	return NULL;
+
+#define SYNTAX_ERROR									\
+	REPORT_ERROR("syntax error on: %lu\n", __LINE__)	\
+	PARSE_LOG("%s returning NULL\n", __func__);			\
+	return NULL;
+
+#define CHECK_RET(ptr)								\
+	if(ptr == NULL)									\
+	{												\
+		PARSE_LOG("%s returning NULL\n", __func__);	\
+		return NULL;								\
+	}												\
+
+#define DO_IF_TOKEN(token, op)														\
+	if(!strncmp(var_name, token, sizeof(token) / sizeof(char))) 					\
+	{																				\
+		PARSE_LOG("Reserved token: %s\n", var_name);								\
+																					\
+		if(str[id] == '(')															\
+		{																			\
+			id++;																	\
+			B_tree_node *child = get_E();											\
+																					\
+			if(str[id] == ')')														\
+			{																		\
+				id++;																\
+				return create_node(OP , {.op_value = op}, NULL, child).arg.node;	\
+			}																		\
+			else																	\
+			{																		\
+				SYNTAX_ERROR;														\
+			}																		\
+		}																			\
+		else																		\
+		{																			\
+			SYNTAX_ERROR;															\
+		}																			\
+	}
+
+static char *str = NULL;
+static size_t id = 0;
+
+struct B_tree_node *get_G(const char *expression)
 {
-	s = str;
-	p = 0;
+	str = skip_spaces(expression, strlen(expression));;
+	printf("%s\n", str);
+
+	id = 0;
+
 	struct B_tree_node *val = get_E();
-	syn_assert(s[p] == '\0', __LINE__);
+	CHECK_RET(val);
+
+	SYNTAX_CHECK(str[id] == '\0');
+
 	return val;
 }
 
 struct B_tree_node *get_N()
 {
 	btr_elem_t val = 0;
-	int old_p = p;
+	size_t old_id = id;
+	bool after_dot = false;
+	size_t after_dot_counter = 0;
 
-	while('0' <= s[p] && s[p] <= '9')
+	while(	('0' <= str[id] && str[id] <= '9') || (str[id] == '.')	)
 	{
-		val = val * 10 + s[p] - '0';
+		if(str[id] == '.')
+		{
+			after_dot = true;
+			id++;
+		}
+		else
+		{
+			if(after_dot)
+			{
+				after_dot_counter++;
+			}
 
-		p++;
+			val = val * 10 + (str[id] - '0');
+
+			id++;
+		}
 	}
 
-	syn_assert(p > old_p, __LINE__);
+	val = val / (after_dot_counter * 10);
+
+	SYNTAX_CHECK(id > old_id);
 
 	return create_node(NUM, {.num_value = val}, NULL, NULL).arg.node;
 }
@@ -35,13 +111,16 @@ struct B_tree_node *get_N()
 struct B_tree_node *get_E()
 {
 	struct B_tree_node *val = get_T();
-	while(s[p] == '+' || s[p] == '-')
-	{
-		char op = s[p];
+	CHECK_RET(val);
 
-		p++;
+	while(str[id] == '+' || str[id] == '-')
+	{
+		char op = str[id];
+
+		id++;
 
 		struct B_tree_node *val_2 = get_T();
+		CHECK_RET(val_2);
 
 		switch(op)
 		{
@@ -57,7 +136,7 @@ struct B_tree_node *get_E()
 			}
 			default:
 			{
-				syn_assert(true, __LINE__);
+				SYNTAX_CHECK(true);
 			}
 		}
 	}
@@ -68,11 +147,13 @@ struct B_tree_node *get_E()
 struct B_tree_node *get_T()
 {
 	struct B_tree_node *val = get_P();
-	while(s[p] == '*' || s[p] == '/')
-	{
-		char op = s[p];
+	CHECK_RET(val);
 
-		p++;
+	while(str[id] == '*' || str[id] == '/')
+	{
+		char op = str[id];
+
+		id++;
 
 		struct B_tree_node *val_2 = get_P();
 
@@ -90,7 +171,7 @@ struct B_tree_node *get_T()
 			}
 			default:
 			{
-				syn_assert(true, __LINE__);
+				SYNTAX_CHECK(true)
 			}
 		}
 	}
@@ -100,25 +181,53 @@ struct B_tree_node *get_T()
 
 struct B_tree_node *get_P()
 {
-	if(s[p] == '(')
+	if(str[id] == '(')
 	{
-		p++;
+		id++;
 		struct B_tree_node *val = get_E();
-		syn_assert(s[p] == ')', __LINE__);
-		p++;
+		CHECK_RET(val);
+
+		SYNTAX_CHECK(str[id] == ')');
+		id++;
 		return val;
 	}
-	else
+	else if('0' <= str[id] && str[id] <= '9')
 	{
 		return get_N();
 	}
-}
-
-void syn_assert(bool cond, size_t line)
-{
-	if(!cond)
+	else
 	{
-		printf("error on: %lu\n", line);
-		exit(EXIT_FAILURE);
+		return get_ID();
 	}
 }
+
+struct B_tree_node *get_ID()
+{
+	PARSE_LOG("%s log:\n", __func__);
+
+	size_t sym_counter = count_symbols(str + id);
+
+	char *var_name = (char *)calloc(sym_counter + 1, sizeof(char));
+	if(var_name == NULL)
+	{
+		REPORT_ERROR("ERROR: allocation error\n");
+	}
+
+	memcpy(var_name, str + id, sym_counter);
+
+	var_name[sym_counter] = '\0';
+
+	id += sym_counter;
+	PARSE_LOG("sym_counter = %lu\n", sym_counter);
+
+	DO_IF_TOKEN("sin", SIN)
+	DO_IF_TOKEN("cos", COS)
+	DO_IF_TOKEN("ln", LN)
+	else
+	{
+		PARSE_LOG("var_name: %s\n\n", var_name);
+
+		return create_node(VAR , {.var_value = var_name}, NULL, NULL).arg.node;
+	}
+}
+

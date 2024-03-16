@@ -1,4 +1,5 @@
 #include "b_tree_secondary.h"
+#include "global.h"
 
 #define LEN(str)\
 	sizeof(str) / sizeof(char)
@@ -240,17 +241,4 @@ void txt_dump_node(struct B_tree_node *node, FILE *console_dump_file)
 
 	txt_dump_node(node->left,  console_dump_file);
 	txt_dump_node(node->right, console_dump_file);
-}
-
-char *create_file_name(const char *name, const char *postfix)
-{
-	size_t byte_code_file_name_size =
-		strlen(postfix) + strlen(name) + ADDITIONAL_CONCATENATION_SPACE;
-
-	char *byte_code_file_name =
-		(char *)calloc(byte_code_file_name_size, sizeof(char));
-
-	snprintf(byte_code_file_name, byte_code_file_name_size, "%s_%s", name, postfix);
-
-	return byte_code_file_name;
 }

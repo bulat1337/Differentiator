@@ -24,4 +24,6 @@ Uni_ret      create_tex_expression(B_tree_node *root, const char *file_name);
 
 B_tree_node *differentiate        (B_tree_node *node);
 
+B_tree_node *node_copy            (B_tree_node *node);
+
 #endif
