@@ -2,6 +2,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <stdarg.h>
+#include <math.h>
 
 #include "global.h"
 
@@ -36,4 +37,38 @@ char *create_file_name(const char *name, const char *postfix)
 	snprintf(byte_code_file_name, byte_code_file_name_size, "%s%s", name, postfix);
 
 	return byte_code_file_name;
+}
+
+int cmp_double(double first_double, double second_double)
+{
+    const double eps = 1e-7;
+
+    if(isnan(first_double) && isnan(second_double))
+    {
+        return 0;
+    }
+    if (fabs(first_double - second_double) < eps)
+    {
+        return 0;
+    }
+    else if ((first_double - second_double) > eps)
+    {
+        return 1;
+    }
+    else
+    {
+        return -1;
+    }
+}
+
+size_t max_len(size_t len_1, size_t len_2)
+{
+	if(len_1 >= len_2)
+	{
+		return len_1;
+	}
+	else
+	{
+		return len_2;
+	}
 }

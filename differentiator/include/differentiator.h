@@ -26,4 +26,10 @@ B_tree_node *differentiate        (B_tree_node *node);
 
 B_tree_node *node_copy            (B_tree_node *node);
 
+B_tree_node *solve_trivial        (B_tree_node *node);
+
+B_tree_node *wrap_consts          (B_tree_node *node);
+
+B_tree_node *simplify             (B_tree_node *node);
+
 #endif

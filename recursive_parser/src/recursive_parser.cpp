@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <math.h>
 
 #include "recursive_parser.h"
 #include "recursive_parser_secondary.h"
@@ -38,7 +39,7 @@
 		if(str[id] == '(')															\
 		{																			\
 			id++;																	\
-			B_tree_node *child = get_E();											\
+			B_tree_node *child = get_add();											\
 																					\
 			if(str[id] == ')')														\
 			{																		\
@@ -59,14 +60,13 @@
 static char *str = NULL;
 static size_t id = 0;
 
-struct B_tree_node *get_G(const char *expression)
+struct B_tree_node *get_gen(const char *expression)
 {
-	str = skip_spaces(expression, strlen(expression));;
-	printf("%s\n", str);
+	str = skip_spaces(expression, strlen(expression));
 
 	id = 0;
 
-	struct B_tree_node *val = get_E();
+	struct B_tree_node *val = get_add();
 	CHECK_RET(val);
 
 	SYNTAX_CHECK(str[id] == '\0');
@@ -74,7 +74,7 @@ struct B_tree_node *get_G(const char *expression)
 	return val;
 }
 
-struct B_tree_node *get_N()
+struct B_tree_node *get_num()
 {
 	btr_elem_t val = 0;
 	size_t old_id = id;
@@ -101,16 +101,16 @@ struct B_tree_node *get_N()
 		}
 	}
 
-	val = val / (after_dot_counter * 10);
+	val = val / (pow(10, after_dot_counter));
 
 	SYNTAX_CHECK(id > old_id);
 
 	return create_node(NUM, {.num_value = val}, NULL, NULL).arg.node;
 }
 
-struct B_tree_node *get_E()
+struct B_tree_node *get_add()
 {
-	struct B_tree_node *val = get_T();
+	struct B_tree_node *val = get_mul();
 	CHECK_RET(val);
 
 	while(str[id] == '+' || str[id] == '-')
@@ -119,7 +119,7 @@ struct B_tree_node *get_E()
 
 		id++;
 
-		struct B_tree_node *val_2 = get_T();
+		struct B_tree_node *val_2 = get_mul();
 		CHECK_RET(val_2);
 
 		switch(op)
@@ -144,9 +144,9 @@ struct B_tree_node *get_E()
 	return val;
 }
 
-struct B_tree_node *get_T()
+struct B_tree_node *get_mul()
 {
-	struct B_tree_node *val = get_P();
+	struct B_tree_node *val = get_pow();
 	CHECK_RET(val);
 
 	while(str[id] == '*' || str[id] == '/')
@@ -155,7 +155,7 @@ struct B_tree_node *get_T()
 
 		id++;
 
-		struct B_tree_node *val_2 = get_P();
+		struct B_tree_node *val_2 = get_pow();
 
 		switch(op)
 		{
@@ -179,12 +179,12 @@ struct B_tree_node *get_T()
 	return val;
 }
 
-struct B_tree_node *get_P()
+struct B_tree_node *get_par()
 {
 	if(str[id] == '(')
 	{
 		id++;
-		struct B_tree_node *val = get_E();
+		struct B_tree_node *val = get_add();
 		CHECK_RET(val);
 
 		SYNTAX_CHECK(str[id] == ')');
@@ -193,15 +193,15 @@ struct B_tree_node *get_P()
 	}
 	else if('0' <= str[id] && str[id] <= '9')
 	{
-		return get_N();
+		return get_num();
 	}
 	else
 	{
-		return get_ID();
+		return get_id();
 	}
 }
 
-struct B_tree_node *get_ID()
+struct B_tree_node *get_id()
 {
 	PARSE_LOG("%s log:\n", __func__);
 
@@ -222,6 +222,7 @@ struct B_tree_node *get_ID()
 
 	DO_IF_TOKEN("sin", SIN)
 	DO_IF_TOKEN("cos", COS)
+	DO_IF_TOKEN("sqrt", SQRT)
 	DO_IF_TOKEN("ln", LN)
 	else
 	{
@@ -231,3 +232,19 @@ struct B_tree_node *get_ID()
 	}
 }
 
+struct B_tree_node *get_pow()
+{
+	struct B_tree_node *val = get_par();
+	CHECK_RET(val);
+
+	while(str[id] == '^')
+	{
+		id++;
+
+		struct B_tree_node *val_2 = get_par();
+
+		val = create_node(OP, {.op_value = POW}, val, val_2).arg.node;
+	}
+
+	return val;
+}

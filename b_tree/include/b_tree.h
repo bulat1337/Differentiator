@@ -45,6 +45,7 @@ enum Ops
 	LN         = 6,
 	SIN        = 7,
 	COS        = 8,
+	SQRT       = 9,
 };
 
 struct Node_value

@@ -5,6 +5,7 @@
 		(	(parent->type == OP) &&														\
 			(	(parent->value.op_value == LN) ||										\
 				(parent->value.op_value == SIN) ||										\
+				(parent->value.op_value == SQRT) ||										\
 				(parent->value.op_value == COS)	)	) ||								\
 		!(	(node->type == NUM) || 														\
 	  		(node->type == VAR) ||		 												\
@@ -17,6 +18,7 @@
 	    	(	(node->type == OP) &&													\
 				(	(node->value.op_value == LN) ||										\
 					(node->value.op_value == SIN) ||									\
+					(node->value.op_value == SQRT) ||									\
 					(node->value.op_value == COS)	)	) ||							\
 			(	(parent->type == OP) && (parent->value.op_value == DO_NOTHING)	)	)	\
 
@@ -34,33 +36,12 @@
 				(	(node->value.op_value == MUL) ||									\
 					(node->value.op_value == DIV) ||									\
 					(node->value.op_value == LN) ||										\
+					(node->value.op_value == SQRT) ||									\
 					(node->value.op_value == SIN) ||									\
 					(node->value.op_value == COS) ||									\
 					(	(node->value.op_value == POW) &&								\
 						!(parent->value.op_value == POW)	)	)	) ||				\
 			(	(parent->type == OP) && (parent->value.op_value == DO_NOTHING)	)	)	\
-
-int cmp_double(double first_double, double second_double)
-{
-    const double eps = 1e-7;
-
-    if(isnan(first_double) && isnan(second_double))
-    {
-        return 0;
-    }
-    if (fabs(first_double - second_double) < eps)
-    {
-        return 0;
-    }
-    else if ((first_double - second_double) > eps)
-    {
-        return 1;
-    }
-    else
-    {
-        return -1;
-    }
-}
 
 void print_node(struct B_tree_node *parent, bool is_right_child, FILE *expression_file)
 {
@@ -124,6 +105,11 @@ void print_node(struct B_tree_node *parent, bool is_right_child, FILE *expressio
 				case COS:
 				{
 					WRITE_IN_EXPRESSION_FILE("cos");
+					break;
+				}
+				case SQRT:
+				{
+					WRITE_IN_EXPRESSION_FILE("sqrt");
 					break;
 				}
 				case DO_NOTHING:
@@ -192,13 +178,14 @@ void tex_node_print(struct B_tree_node *parent, bool is_right_child, FILE *expre
     	WRITE_IN_EXPRESSION_FILE("(");
 	}
 
-	if((parent->type == OP) && (parent->value.op_value == POW))
+	if(	(parent->type == OP) &&
+		(	(parent->value.op_value == POW) ||
+			(parent->value.op_value == SQRT)	)	)
 	{
 		WRITE_IN_EXPRESSION_FILE("{");
 	}
 
-	if(	!(	(	(node->type == OP) && (node->value.op_value == DIV)	) ||
-			(	(node->type == OP) && (node->value.op_value == LN)	)	)	)
+	if(	!(	(node->type == OP) && (node->value.op_value == DIV)	)	)
 	{
 		tex_node_print(node, LEFT_CHILD, expression);
 	}
@@ -249,6 +236,11 @@ void tex_node_print(struct B_tree_node *parent, bool is_right_child, FILE *expre
 					WRITE_IN_EXPRESSION_FILE("\\cos");
 					break;
 				}
+				case SQRT:
+				{
+					WRITE_IN_EXPRESSION_FILE("\\sqrt");
+					break;
+				}
 				case DO_NOTHING:
 				{
 					break;
@@ -277,8 +269,7 @@ void tex_node_print(struct B_tree_node *parent, bool is_right_child, FILE *expre
 		}
 	}
 
-	if(	(	(node->type == OP) && (node->value.op_value == DIV)	) ||
-		(	(node->type == OP) && (node->value.op_value == LN)	)	)
+	if(	(	(node->type == OP) && (node->value.op_value == DIV)	)	)
 	{
 		WRITE_IN_EXPRESSION_FILE("{");
 		tex_node_print(node, LEFT_CHILD, expression);
@@ -293,7 +284,9 @@ void tex_node_print(struct B_tree_node *parent, bool is_right_child, FILE *expre
     	tex_node_print(node, RIGHT_CHILD, expression);
 	}
 
-	if((parent->type == OP) && (parent->value.op_value == POW))
+	if(	(parent->type == OP) &&
+		(	(parent->value.op_value == POW) ||
+			(parent->value.op_value == SQRT)	)	)
 	{
 		WRITE_IN_EXPRESSION_FILE("}");
 	}
@@ -308,6 +301,10 @@ void tex_node_print(struct B_tree_node *parent, bool is_right_child, FILE *expre
 
 btr_elem_t get_var_value(const char *var_name, const struct Labels_w_len *labels_w_len)
 {
+	if(labels_w_len == NULL)
+	{
+		return NAN;
+	}
 	for(size_t label_ID = 0; label_ID < labels_w_len->length; label_ID++)
 	{
 		if(!strncmp(var_name, labels_w_len->labels[label_ID].name, strlen(var_name)))

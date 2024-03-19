@@ -8,11 +8,12 @@
 #include "differentiator.h"
 #include "global.h"
 
-struct B_tree_node *get_G(const char *str);
-struct B_tree_node *get_N();
-struct B_tree_node *get_E();
-struct B_tree_node *get_T();
-struct B_tree_node *get_P();
-struct B_tree_node *get_ID();
+struct B_tree_node *get_gen(const char *str);
+struct B_tree_node *get_num();
+struct B_tree_node *get_add();
+struct B_tree_node *get_mul();
+struct B_tree_node *get_par();
+struct B_tree_node *get_id();
+struct B_tree_node *get_pow();
 
 #endif

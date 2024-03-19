@@ -3,8 +3,6 @@
 
 #include "differentiator.h"
 
-int          cmp_double    (double first_double, double second_double);
-
 void         print_node    (B_tree_node *parent, bool is_right_child, FILE *expression);
 
 void         tex_node_print(B_tree_node *parent, bool is_right_child, FILE *expression);
