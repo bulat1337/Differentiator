@@ -4,6 +4,15 @@
 #include "b_tree.h"
 #include "recursive_parser.h"
 
+#define DIFF_EXP(node)\
+	diff_exp(node, #node)
+
+#define TEX_EXP(node)\
+	tex_exp(node, #node);
+
+#define SIMPL_EXP(node)\
+	simpl_exp(node, #node)
+
 struct Var_label
 {
 	char *name;
@@ -20,16 +29,16 @@ btr_elem_t   eval                 (B_tree_node *node, Labels_w_len *labels_w_len
 
 Uni_ret      create_txt_expression(B_tree_node *root, const char *file_name);
 
-Uni_ret      create_tex_expression(B_tree_node *root, const char *file_name);
-
-B_tree_node *differentiate        (B_tree_node *node);
-
 B_tree_node *node_copy            (B_tree_node *node);
 
 B_tree_node *solve_trivial        (B_tree_node *node);
 
 B_tree_node *wrap_consts          (B_tree_node *node);
 
-B_tree_node *simplify             (B_tree_node *node);
+Uni_ret      simpl_exp            (B_tree_node *root, const char *name);
+
+Uni_ret      diff_exp             (B_tree_node *root, const char *name);
+
+error_t      tex_exp              (B_tree_node *root, const char *name);
 
 #endif

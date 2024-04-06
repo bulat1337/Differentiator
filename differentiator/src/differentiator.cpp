@@ -2,6 +2,7 @@
 
 #include "differentiator.h"
 #include "differentiator_secondary.h"
+
 #include "def_DSL.h"
 
 btr_elem_t eval(struct B_tree_node *node, struct Labels_w_len *labels_w_len)
@@ -117,122 +118,6 @@ Uni_ret create_txt_expression(struct B_tree_node *root, const char *file_name)
 	return result;
 }
 
-Uni_ret create_tex_expression(struct B_tree_node *root, const char *file_name)
-{
-	Uni_ret result =
-	{
-		.error_code = ALL_GOOD,
-		.arg.file_ptr = fopen(file_name, "w"),
-	};
-
-	if(result.arg.file_ptr == NULL)
-	{
-		perror("ERROR:");
-		result.error_code = UNABLE_TO_OPEN_FILE;
-
-		return result;
-	}
-
-	struct B_tree_node fictitious_root_parent =
-	{
-		.type = OP,
-		.value.op_value = DO_NOTHING,
-		.left = root,
-		.right = root,
-	};
-
-	fprintf(result.arg.file_ptr, "$$ ");
-
-	tex_node_print(&fictitious_root_parent, RIGHT_CHILD, result.arg.file_ptr);
-
-	fprintf(result.arg.file_ptr, " $$");
-
-	fclose(result.arg.file_ptr);
-
-	return result;
-}
-
-struct B_tree_node *differentiate(struct B_tree_node *node)
-{
-	if(node == NULL)
-	{
-		fprintf(stderr, "NODE_NULL_PTR\n");
-		return NULL;
-	}
-
-	switch(node->type)
-	{
-		case NUM:
-		{
-			return ZERO;
-			break;
-		}
-		case VAR:
-		{
-			return ONE;
-			break;
-		}
-		case OP:
-		{
-			switch(node->value.op_value)
-			{
-				case ADD:
-				{
-					return ADD(dL, dR);
-				}
-				case SUB:
-				{
-					return SUB(dL, dR);
-				}
-				case MUL:
-				{
-					return ADD(MUL(dL, cR), MUL(cL, dR));
-				}
-				case DIV:
-				{
-					return DIV(SUB(MUL(dL, cR), MUL(cL, dR)), POW(cR, TWO));
-				}
-				case POW:
-				{
-					B_tree_node *left_child  = MUL(MUL(cR, POW(cL, SUB(cR, ONE))), dL);
-					B_tree_node *right_child = MUL(MUL(POW(cL, cR), LN(cL)), dR);
-
-					return ADD(left_child, right_child);
-				}
-				case LN:
-				{
-					return MUL(DIV(ONE, cR), dR);
-				}
-				case SIN:
-				{
-					return MUL(COS(cR), dR);
-				}
-				case COS:
-				{
-					return MUL(SUB(ZERO, SIN(cR)), dR);
-				}
-				case SQRT:
-				{
-					return MUL(DIV(ONE, MUL(TWO, SQRT(cR))), dR);
-				}
-				case DO_NOTHING:
-				{
-					exit(EXIT_FAILURE);
-				}
-				default:
-				{
-					exit(EXIT_FAILURE);
-				}
-			}
-		}
-		default:
-		{
-			fprintf(stderr, "Unknown node type %d\n", node->type);
-			return NULL;
-		}
-	}
-}
-
 struct B_tree_node *node_copy(struct B_tree_node *node)
 {
 	if(node == NULL)
@@ -256,173 +141,76 @@ struct B_tree_node *node_copy(struct B_tree_node *node)
 	return copy;
 }
 
-static bool change_flag = false;
-static bool non_trivial_flag = false;
-
-B_tree_node *wrap_consts(B_tree_node *node)
+Uni_ret diff_exp(B_tree_node *root, const char *name)
 {
-	change_flag = false;
-
-	if(node == NULL)
+	Uni_ret result =
 	{
-		return NULL;
+		.error_code = ALL_GOOD,
+	};
+
+	char *file_name = create_file_name(name, "_diff.tex");
+
+	FILE *tex_file = fopen(file_name, "w");
+	if(tex_file == NULL)
+	{
+		//log error
+
+		result.error_code = UNABLE_TO_OPEN_FILE;
+		return result;
 	}
 
-	if(node->left == NULL || node->right == NULL)
-	{
-		return node;
-	}
+	result.arg.node = differentiate(root, tex_file);
 
-	if(node->left->type == NUM && node->right->type == NUM)
-	{
-		btr_elem_t result = eval(node, NULL);
+	fclose(tex_file);
 
-		change_flag = true;
-
-		return create_node(NUM, {.num_value = result}, NULL, NULL).arg.node;
-	}
-	else
-	{
-		return node;
-	}
+	return result;
 }
 
-B_tree_node *solve_trivial(B_tree_node *node)
+error_t tex_exp(B_tree_node *root, const char *name)
 {
-	change_flag      = false;
-	non_trivial_flag = false;
+	char *file_name = create_file_name(name, ".tex");
 
-	if(node == NULL)
+	FILE *tex_file = fopen(file_name, "w");
+	if(tex_file == NULL)
 	{
-		return NULL;
-	}
+		//log error
 
-	if(node->left == NULL || node->right == NULL)
-	{
-		return node;
+		return UNABLE_TO_OPEN_FILE;
 	}
 
-	if(node->left->type == NUM && cmp_double(node->left->value.num_value, 0) == 0)
-	{
-		if(	(node->type == OP) &&
-			(	(node->value.op_value == MUL)	||
-				(node->value.op_value == DIV)	||
-				(node->value.op_value == POW)	)	)
-		{
-			change_flag = true;
-			return ZERO;
-		}
-		else if(node->type == OP && node->value.op_value == ADD)
-		{
-			change_flag      = true;
-			non_trivial_flag = true;
-			return node->right; // might be simplified further
-		}
-	}
-	else if(node->right->type == NUM && cmp_double(node->right->value.num_value, 0) == 0)
-	{
-		if(node->type == OP && node->value.op_value == MUL)
-		{
-			change_flag = true;
-			return ZERO;
-		}
-		else if(node->type == OP && node->value.op_value == POW)
-		{
-			change_flag = true;
-			return ONE;
-		}
-		else if	(	(node->type == OP) &&
-					(node->value.op_value == DIV)	)
-		{
-			change_flag = true;
-			return create_node(NUM, {.num_value = NAN}, NULL, NULL).arg.node;
-		}
-		else if(	(node->type == OP) &&
-					(	(node->value.op_value == ADD)	||
-						(node->value.op_value == SUB)	)	)
-		{
-			change_flag      = true;
-			non_trivial_flag = true;
-			return node->left; // might be simplified further
-		}
-	}
-	else if(node->left->type == NUM && cmp_double(node->left->value.num_value, 1) == 0)
-	{
-		if(node->type == OP && node->value.op_value == MUL)
-		{
-			change_flag      = true;
-			non_trivial_flag = true;
-			return node->right;	// might be simplified further
-		}
-		else if(node->type == OP && node->value.op_value == POW)
-		{
-			change_flag = true;
-			return ONE;
-		}
-	}
-	else if(node->right->type == NUM && cmp_double(node->right->value.num_value, 1) == 0)
-	{
-		if(	(node->type == OP) &&
-			(	(node->value.op_value == MUL) ||
-				(node->value.op_value == POW) ||
-				(node->value.op_value == DIV)	)	)
-		{
-			change_flag      = true;
-			non_trivial_flag = true;
-			return node->left;	// might be simplified further
-		}
-	}
-	else if(	(node->left->type == VAR) &&
-				(node->right->type == VAR) &&
-				(node->type == OP && node->value.op_value == SUB) &&
-				(!strncmp(LEFT_VAR, RIGHT_VAR, MAX_VAR_LEN))	)
-	{
-		change_flag = true;
-		return ZERO;
-	}
+	TEX("$$");
+	create_tex_expression(root, tex_file);
+	TEX("$$");
 
+	fclose(tex_file);
 
-	return node;
+	return ALL_GOOD;
 }
 
-#define TRY_TO_SIMPLIFY					\
-	if(node == NULL)					\
-	{									\
-		return NULL;					\
-	}									\
-										\
-	simple_node = wrap_consts(node);	\
-	if(change_flag == true)				\
-	{									\
-		return simple_node;				\
-	}									\
-										\
-	simple_node = solve_trivial(node);	\
-	if(non_trivial_flag == true)\
-	{									\
-		return simplify(simple_node);	\
-	}									\
-										\
-	if(change_flag == true)				\
-	{									\
-		return simple_node;				\
+Uni_ret simpl_exp(B_tree_node *root, const char *name)
+{
+	Uni_ret result =
+	{
+		.error_code = ALL_GOOD,
+	};
+
+	char *file_name = create_file_name(name, "_simpl.tex");
+
+	FILE *tex_file = fopen(file_name, "w");
+	if(tex_file == NULL)
+	{
+		//log error
+
+		result.error_code = UNABLE_TO_OPEN_FILE;
+		return result;
 	}
 
-B_tree_node *simplify(B_tree_node *node)
-{
-	B_tree_node *simple_node = NULL;
+	result.arg.node = simplify(root, tex_file);
 
-	TRY_TO_SIMPLIFY;
+	fclose(tex_file);
 
-	node->left  = simplify(node->left);
-	node->right = simplify(node->right);
-
-	TRY_TO_SIMPLIFY;
-
-	return node;
+	return result;
 }
-
-#undef TRY_TO_SIMPLIFY
 
 
 #include "undef_DSL.h"

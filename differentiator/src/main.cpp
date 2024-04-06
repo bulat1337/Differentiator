@@ -4,36 +4,25 @@
 
 int main()
 {
-	struct B_tree_node *expression = get_gen("x ^ 2");
+	struct B_tree_node *expression = get_gen("x ^ 2 + x ^ 3");
 	GR_DUMP_CODE_GEN(expression);
+	TEX_EXP(expression);
 
-	create_tex_expression(expression, "expression_exp.tex");
 
-	B_tree_node *diff_exp = differentiate(expression);
-	create_tex_expression(diff_exp, "diff_exp.tex");
-	GR_DUMP_CODE_GEN(diff_exp);
+	B_tree_node *differentiated = DIFF_EXP(expression).arg.node;
+	GR_DUMP_CODE_GEN(differentiated);
 
-	B_tree_node *simple_exp = simplify(diff_exp);
+	B_tree_node *simple_exp = SIMPL_EXP(differentiated).arg.node;
 	GR_DUMP_CODE_GEN(simple_exp);
 
-// 	struct Var_label labels[2] =
-// 	{
-// 		{.name = "ass", .value = 3},
-// 		{.name = "x", .value = 2}
-// 	};
-//
-// 	struct Labels_w_len labels_w_len =
-// 	{
-// 		.labels = labels,
-// 		.length = 2,
-// 	};
-//
-// 	printf("eval result: %lf\n", eval(expression, &labels_w_len));
+	B_tree_node *differentiated_2 = DIFF_EXP(simple_exp).arg.node;
+	GR_DUMP_CODE_GEN(differentiated_2);
 
-	create_tex_expression(expression, "expression_exp.tex");
-	create_txt_expression(expression, "expression_exp.txt");
+	B_tree_node *simple_exp_2 = SIMPL_EXP(differentiated_2).arg.node;
+	GR_DUMP_CODE_GEN(simple_exp_2);
 
-	TXT_DUMP(expression);
+
+// 	TXT_DUMP(expression);
 
 
 	return 0;

@@ -1,5 +1,6 @@
 #include "differentiator.h"
 #include "differentiator_secondary.h"
+#include "def_DSL.h"
 
 #define PUT_PARENTHESIS_COND\
 		(	(parent->type == OP) &&														\
@@ -315,3 +316,323 @@ btr_elem_t get_var_value(const char *var_name, const struct Labels_w_len *labels
 
 	return NAN;
 }
+
+error_t tex_src_diff_node(FILE *tex_file, B_tree_node *node)
+{
+	TEX("Let's solve:\n");
+	TEX("$$ d(");
+	create_tex_expression(node, tex_file);
+	TEX(") $$\n");
+
+	return ALL_GOOD;
+}
+
+error_t tex_src_simpl_node(FILE *tex_file, B_tree_node *node)
+{
+	TEX("Let's simplify:\n");
+	TEX("$$ ");
+	create_tex_expression(node, tex_file);
+	TEX(" $$\n");
+
+	return ALL_GOOD;
+}
+
+error_t tex_result(FILE *tex_file, B_tree_node *result)
+{
+	fprintf(tex_file, "result:\n$$ ");
+	create_tex_expression(result, tex_file);
+	fprintf(tex_file, " $$\n");
+
+	return ALL_GOOD;
+}
+
+#undef TEX
+
+struct B_tree_node *differentiate(struct B_tree_node *node, FILE *tex_file)
+{
+	if(node == NULL)
+	{
+		fprintf(stderr, "NODE_NULL_PTR\n");
+		return NULL;
+	}
+
+	tex_src_diff_node(tex_file, node);
+
+	B_tree_node *result = NULL;
+
+	switch(node->type)
+	{
+		case NUM:
+		{
+			result = ZERO;
+			break;
+		}
+		case VAR:
+		{
+			result = ONE;
+			break;
+		}
+		case OP:
+		{
+			switch(node->value.op_value)
+			{
+				case ADD:
+				{
+					result = ADD(dL, dR);
+					break;
+				}
+				case SUB:
+				{
+					result = SUB(dL, dR);
+					break;
+				}
+				case MUL:
+				{
+					result = ADD(MUL(dL, cR), MUL(cL, dR));
+					break;
+				}
+				case DIV:
+				{
+					result = DIV(SUB(MUL(dL, cR), MUL(cL, dR)), POW(cR, TWO));
+					break;
+				}
+				case POW:
+				{
+					B_tree_node *left_child  = MUL(MUL(cR, POW(cL, SUB(cR, ONE))), dL);
+					B_tree_node *right_child = MUL(MUL(POW(cL, cR), LN(cL)), dR);
+
+					result = ADD(left_child, right_child);
+					break;
+				}
+				case LN:
+				{
+					result = MUL(DIV(ONE, cR), dR);
+					break;
+				}
+				case SIN:
+				{
+					result = MUL(COS(cR), dR);
+					break;
+				}
+				case COS:
+				{
+					result = MUL(SUB(ZERO, SIN(cR)), dR);
+					break;
+				}
+				case SQRT:
+				{
+					result = MUL(DIV(ONE, MUL(TWO, SQRT(cR))), dR);
+					break;
+				}
+				case DO_NOTHING:
+				{
+					exit(EXIT_FAILURE);
+				}
+				default:
+				{
+					exit(EXIT_FAILURE);
+				}
+			}
+
+			break;
+		}
+		default:
+		{
+			fprintf(stderr, "Unknown node type %d\n", node->type);
+			return NULL;
+		}
+	}
+
+	tex_result(tex_file, result);
+
+	return result;
+}
+
+error_t create_tex_expression(struct B_tree_node *root, FILE *tex_file)
+{
+	struct B_tree_node fictitious_root_parent =
+	{
+		.type = OP,
+		.value.op_value = DO_NOTHING,
+		.left = root,
+		.right = root,
+	};
+
+	tex_node_print(&fictitious_root_parent, RIGHT_CHILD, tex_file);
+
+	return ALL_GOOD;
+}
+
+static bool change_flag      = false;
+static bool non_trivial_flag = false;
+
+#define TRY_TO_SIMPLIFY								\
+	simple_node = wrap_consts(node);				\
+	if(change_flag == true)							\
+	{												\
+		tex_result(tex_file, simple_node);			\
+		return simple_node;							\
+	}												\
+													\
+	simple_node = solve_trivial(node);				\
+	if(non_trivial_flag == true)					\
+	{												\
+		result = simplify(simple_node, tex_file);	\
+		tex_result(tex_file, result);				\
+		return result;								\
+	}												\
+													\
+	if(change_flag == true)							\
+	{												\
+		tex_result(tex_file, simple_node);			\
+		return simple_node;							\
+	}
+
+B_tree_node *simplify(B_tree_node *node, FILE *tex_file)
+{
+	if(node == NULL)
+	{
+		return NULL;
+	}
+
+	B_tree_node *simple_node = NULL;
+	B_tree_node *result = NULL;
+
+	tex_src_simpl_node(tex_file, node);
+
+	TRY_TO_SIMPLIFY;
+
+	node->left  = simplify(node->left, tex_file);
+	node->right = simplify(node->right, tex_file);
+
+	TRY_TO_SIMPLIFY;
+
+	tex_result(tex_file, node);
+
+	return node;
+}
+
+#undef TRY_TO_SIMPLIFY
+
+B_tree_node *wrap_consts(B_tree_node *node)
+{
+	change_flag = false;
+
+	if(node == NULL)
+	{
+		return NULL;
+	}
+
+	if(node->left == NULL || node->right == NULL)
+	{
+		return node;
+	}
+
+	if(node->left->type == NUM && node->right->type == NUM)
+	{
+		btr_elem_t result = eval(node, NULL);
+
+		change_flag = true;
+
+		return create_node(NUM, {.num_value = result}, NULL, NULL).arg.node;
+	}
+	else
+	{
+		return node;
+	}
+}
+
+B_tree_node *solve_trivial(B_tree_node *node)
+{
+	change_flag      = false;
+	non_trivial_flag = false;
+
+	if(node == NULL)
+	{
+		return NULL;
+	}
+
+	if(node->left == NULL || node->right == NULL)
+	{
+		return node;
+	}
+
+	if(LEFT_IS_ZERO)
+	{
+		if(ZERO__MUL_DIV_POW__ANY)
+		{
+			change_flag = true;
+			return ZERO;
+		}
+		else if(ZERO__ADD__ANY)
+		{
+			change_flag      = true;
+			non_trivial_flag = true;
+			return node->right; // might be simplified further
+		}
+	}
+	else if(RIGHT_IS_ZERO)
+	{
+		if(ANY__MUL__ZERO)
+		{
+			change_flag = true;
+			return ZERO;
+		}
+		else if(ANY__POW__ZERO)
+		{
+			change_flag = true;
+			return ONE;
+		}
+		else if	(ANY__DIV__ZERO)
+		{
+			change_flag = true;
+			return create_node(NUM, {.num_value = NAN}, NULL, NULL).arg.node;
+		}
+		else if(ANY__ADD_SUB__ZERO)
+		{
+			change_flag      = true;
+			non_trivial_flag = true;
+			return node->left; // might be simplified further
+		}
+	}
+	else if(LEFT_IS_ONE)
+	{
+		if(ONE__MUL__ANY)
+		{
+			change_flag      = true;
+			non_trivial_flag = true;
+			return node->right;	// might be simplified further
+		}
+		else if(ONE__POW__ANY)
+		{
+			change_flag = true;
+			return ONE;
+		}
+	}
+	else if(RIGHT_IS_ONE)
+	{
+		if(ANY__MUL_POW_DIV__ONE)
+		{
+			change_flag      = true;
+			non_trivial_flag = true;
+			return node->left;	// might be simplified further
+		}
+	}
+	else if(VAR__SUB__VAR)
+	{
+		change_flag = true;
+		return ZERO;
+	}
+// 	else if(SAME_OP_W_CONSTS)
+//
+// 	#define SAME_OP_W_CONSTS\
+// 	left or right is const
+// 		and the other one is op
+// 			and left or right of the op is the same op
+// 				and left or right child of the ops op is const
+
+
+	return node;
+}
+
+#include "undef_DSL.h"

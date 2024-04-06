@@ -87,13 +87,12 @@ const size_t OP_TOKEN_SIZE 		  = 15;
 const size_t GR_DUMP_GEN_CMD_SIZE = 100;
 const bool   RIGHT_CHILD          = true;
 const bool   LEFT_CHILD           = false;
-
-const char * const PASTEL_GREEN = "#9AFF55";
-const char * const LIGHT_GREEN  = "#D7FF25";
-const char * const LIGHT_BLUE   = "#2595FF";
-const char * const CORAL_PINK   = "#F08080";
-const char * const MARGENGO     = "#48565D";
-const char * const RED_PINK     = "#FF5555";
+const char * const PASTEL_GREEN   = "#9AFF55";
+const char * const LIGHT_GREEN    = "#D7FF25";
+const char * const LIGHT_BLUE     = "#2595FF";
+const char * const CORAL_PINK     = "#F08080";
+const char * const MARGENGO       = "#48565D";
+const char * const RED_PINK       = "#FF5555";
 
 
 Uni_ret create_node     (Node_type type, Node_value value, B_tree_node *left_child,
