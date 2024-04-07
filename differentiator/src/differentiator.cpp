@@ -5,6 +5,8 @@
 
 #include "def_DSL.h"
 
+Notations notations = {};
+
 btr_elem_t eval(struct B_tree_node *node, struct Labels_w_len *labels_w_len)
 {
 	if(node == NULL)
@@ -159,7 +161,11 @@ Uni_ret diff_exp(B_tree_node *root, const char *name)
 		return result;
 	}
 
+	refresh_notations();
+
 	result.arg.node = differentiate(root, tex_file);
+
+	tex_notations(tex_file);
 
 	fclose(tex_file);
 
@@ -179,7 +185,7 @@ error_t tex_exp(B_tree_node *root, const char *name)
 	}
 
 	TEX("$$");
-	create_tex_expression(root, tex_file);
+	create_tex_expression(root, tex_file, true);
 	TEX("$$");
 
 	fclose(tex_file);

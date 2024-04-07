@@ -163,7 +163,8 @@ struct B_tree_node *get_node(struct B_tree_node *parent, bool is_right_child)
 	}
 }
 
-void tex_node_print(struct B_tree_node *parent, bool is_right_child, FILE *expression)
+void tex_node_print(struct B_tree_node *parent, bool is_right_child,
+					FILE *expression, bool do_var_rep)
 {
 	#define WRITE_IN_EXPRESSION_FILE(...) fprintf(expression, __VA_ARGS__);
 
@@ -173,6 +174,33 @@ void tex_node_print(struct B_tree_node *parent, bool is_right_child, FILE *expre
     {
         return;
     }
+
+	if(do_var_rep)
+	{
+		//get node size
+		size_t node_size = get_node_size(node);
+
+		//check if notation already exists
+		Notat_check check = check_if_notated(node);
+		if(check.notated)
+		{
+			WRITE_IN_EXPRESSION_FILE("%c", check.letter);
+
+			return;
+		}
+
+		//decide if the temp variable is needed
+		if(node_size > NOTAT_BOUND)
+		{
+			char notation = set_notation(node);
+
+			printf("cause node_size = %lu\n", node_size);
+
+			WRITE_IN_EXPRESSION_FILE("%c", notation)
+
+			return;
+		}
+	}
 
 	if(PUT_PARENTHESIS_COND_TEX)
 	{
@@ -188,7 +216,7 @@ void tex_node_print(struct B_tree_node *parent, bool is_right_child, FILE *expre
 
 	if(	!(	(node->type == OP) && (node->value.op_value == DIV)	)	)
 	{
-		tex_node_print(node, LEFT_CHILD, expression);
+		tex_node_print(node, LEFT_CHILD, expression, true);
 	}
 
 	switch(node->type)
@@ -273,16 +301,16 @@ void tex_node_print(struct B_tree_node *parent, bool is_right_child, FILE *expre
 	if(	(	(node->type == OP) && (node->value.op_value == DIV)	)	)
 	{
 		WRITE_IN_EXPRESSION_FILE("{");
-		tex_node_print(node, LEFT_CHILD, expression);
+		tex_node_print(node, LEFT_CHILD, expression, true);
 		WRITE_IN_EXPRESSION_FILE("}");
 
 		WRITE_IN_EXPRESSION_FILE("{");
-		tex_node_print(node, RIGHT_CHILD, expression);
+		tex_node_print(node, RIGHT_CHILD, expression, true);
 		WRITE_IN_EXPRESSION_FILE("}");
 	}
 	else
 	{
-    	tex_node_print(node, RIGHT_CHILD, expression);
+    	tex_node_print(node, RIGHT_CHILD, expression, true);
 	}
 
 	if(	(parent->type == OP) &&
@@ -321,7 +349,7 @@ error_t tex_src_diff_node(FILE *tex_file, B_tree_node *node)
 {
 	TEX("Let's solve:\n");
 	TEX("$$ d(");
-	create_tex_expression(node, tex_file);
+	create_tex_expression(node, tex_file, true);
 	TEX(") $$\n");
 
 	return ALL_GOOD;
@@ -331,7 +359,7 @@ error_t tex_src_simpl_node(FILE *tex_file, B_tree_node *node)
 {
 	TEX("Let's simplify:\n");
 	TEX("$$ ");
-	create_tex_expression(node, tex_file);
+	create_tex_expression(node, tex_file, true);
 	TEX(" $$\n");
 
 	return ALL_GOOD;
@@ -340,13 +368,11 @@ error_t tex_src_simpl_node(FILE *tex_file, B_tree_node *node)
 error_t tex_result(FILE *tex_file, B_tree_node *result)
 {
 	fprintf(tex_file, "result:\n$$ ");
-	create_tex_expression(result, tex_file);
+	create_tex_expression(result, tex_file, true);
 	fprintf(tex_file, " $$\n");
 
 	return ALL_GOOD;
 }
-
-#undef TEX
 
 struct B_tree_node *differentiate(struct B_tree_node *node, FILE *tex_file)
 {
@@ -448,7 +474,7 @@ struct B_tree_node *differentiate(struct B_tree_node *node, FILE *tex_file)
 	return result;
 }
 
-error_t create_tex_expression(struct B_tree_node *root, FILE *tex_file)
+error_t create_tex_expression(struct B_tree_node *root, FILE *tex_file, bool do_var_rep)
 {
 	struct B_tree_node fictitious_root_parent =
 	{
@@ -458,7 +484,7 @@ error_t create_tex_expression(struct B_tree_node *root, FILE *tex_file)
 		.right = root,
 	};
 
-	tex_node_print(&fictitious_root_parent, RIGHT_CHILD, tex_file);
+	tex_node_print(&fictitious_root_parent, RIGHT_CHILD, tex_file, do_var_rep);
 
 	return ALL_GOOD;
 }
@@ -635,4 +661,94 @@ B_tree_node *solve_trivial(B_tree_node *node)
 	return node;
 }
 
+size_t get_node_size(B_tree_node *node)
+{
+	if(node == NULL)
+	{
+		return 0;
+	}
+
+	if(check_if_notated(node).notated)
+	{
+		return 1;
+	}
+
+	size_t size = 1;
+
+	size += get_node_size(node->left);
+	size += get_node_size(node->right);
+
+	return size;
+}
+
+char set_notation(B_tree_node *node)
+{
+	size_t cur_ID = notations.size;
+	char cur_letter = 'A' + (char)cur_ID;
+
+	notations.data[cur_ID].node = node;
+	notations.data[cur_ID].letter = cur_letter;
+
+	(notations.size)++;
+
+	return cur_letter;
+}
+
+error_t refresh_notations()
+{
+	CALLOC(notations.data, AMOUNT_OF_NOTATIONS, Notation);
+
+	for(size_t notat_ID = 0; notat_ID < notations.size; notat_ID++)
+	{
+		notations.data[notat_ID].node   = NULL;
+		notations.data[notat_ID].letter = 0;
+	}
+
+	notations.size = 0;
+
+	return ALL_GOOD;
+}
+
+void tex_notations(FILE *tex_file)
+{
+	TEX("Where:\\newline ");
+
+	for(size_t notat_ID = 0; notat_ID < notations.size; notat_ID++)
+	{
+		TEX("%c = ", notations.data[notat_ID].letter);
+		TEX("$$ ");
+		/* происодит повторная нотация узлов
+		   когда мы поднимаемся на уровень выше должны использоваться
+		   те переменные которые мы ввели. сейчас decition if notate происходит
+		   на каждом уровне игнорируя предыдущие нотации, основываясь только на размере дерева
+		   нужно больше условий для ввода переменных*/
+		create_tex_expression(notations.data[notat_ID].node, tex_file, false);
+		TEX(" $$\n");
+	}
+}
+
+//true if there is notation
+Notat_check check_if_notated(B_tree_node *node)
+{
+	Notat_check result =
+	{
+		.notated = false,
+		.letter  = 0,
+	};
+
+	for(size_t notat_ID = 0; notat_ID < notations.size; notat_ID++)
+	{
+		if(notations.data[notat_ID].node == node)
+		{
+			result.notated = true;
+			result.letter  = notations.data[notat_ID].letter;
+
+			return result;
+		}
+	}
+
+	return result;
+}
+
+#undef TEX
 #include "undef_DSL.h"

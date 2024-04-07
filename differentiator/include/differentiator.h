@@ -4,6 +4,14 @@
 #include "b_tree.h"
 #include "recursive_parser.h"
 
+#define CALLOC(ptr, amount, type)						\
+	ptr = (type *)calloc(amount, sizeof(type));			\
+	if(ptr == NULL)										\
+	{													\
+		fprintf(stderr, "Unable to allocate"#ptr"\n");	\
+		return UNABLE_TO_ALLOCATE;						\
+	}
+
 #define DIFF_EXP(node)\
 	diff_exp(node, #node)
 
@@ -12,6 +20,21 @@
 
 #define SIMPL_EXP(node)\
 	simpl_exp(node, #node)
+
+struct Notation
+{
+	char        letter;
+	B_tree_node *node;
+};
+
+struct Notations
+{
+	size_t    size;
+	Notation *data;
+};
+
+extern Notations notations;
+
 
 struct Var_label
 {
