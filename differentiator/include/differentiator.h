@@ -62,6 +62,6 @@ Uni_ret      simpl_exp            (B_tree_node *root, const char *name);
 
 Uni_ret      diff_exp             (B_tree_node *root, const char *name);
 
-error_t      tex_exp              (B_tree_node *root, const char *name);
+Uni_ret      tex_exp              (B_tree_node *root, const char *name);
 
 #endif

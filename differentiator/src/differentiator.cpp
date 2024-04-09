@@ -7,6 +7,19 @@
 
 Notations notations = {};
 
+#define FILE_PTR_CHECK(ptr)								\
+	{													\
+		if(ptr == NULL)									\
+		{												\
+			fprintf(stderr, "Unable to open"#ptr"\n");	\
+														\
+			result.arg.node   = NULL;					\
+			result.error_code = UNABLE_TO_OPEN_FILE;	\
+														\
+			return result;								\
+		}												\
+	}
+
 btr_elem_t eval(struct B_tree_node *node, struct Labels_w_len *labels_w_len)
 {
 	if(node == NULL)
@@ -152,45 +165,49 @@ Uni_ret diff_exp(B_tree_node *root, const char *name)
 
 	char *file_name = create_file_name(name, "_diff.tex");
 
-	FILE *tex_file = fopen(file_name, "w");
-	if(tex_file == NULL)
-	{
-		//log error
+	WITH_OPEN
+	(
+		file_name, "w", tex_file,
 
-		result.error_code = UNABLE_TO_OPEN_FILE;
-		return result;
-	}
+		init_notations();
 
-	refresh_notations();
+		result.arg.node = differentiate(root, tex_file);
 
-	result.arg.node = differentiate(root, tex_file);
+		tex_notations(tex_file);
 
-	tex_notations(tex_file);
-
-	fclose(tex_file);
+		notations_dtor();
+	)
 
 	return result;
 }
 
-error_t tex_exp(B_tree_node *root, const char *name)
+Uni_ret tex_exp(B_tree_node *root, const char *name)
 {
+	Uni_ret result =
+	{
+		.error_code = ALL_GOOD,
+	};
+
 	char *file_name = create_file_name(name, ".tex");
 
-	FILE *tex_file = fopen(file_name, "w");
-	if(tex_file == NULL)
-	{
-		//log error
+	WITH_OPEN
+	(
+		file_name, "w", tex_file,
 
-		return UNABLE_TO_OPEN_FILE;
-	}
+		init_notations();
 
-	TEX("$$");
-	create_tex_expression(root, tex_file, true);
-	TEX("$$");
+		manage_notations(root);
 
-	fclose(tex_file);
+		TEX("$$");
+		create_tex_expression(root, tex_file, true);
+		TEX("$$");
 
-	return ALL_GOOD;
+		tex_notations(tex_file);
+
+		notations_dtor();
+	)
+
+	return result;
 }
 
 Uni_ret simpl_exp(B_tree_node *root, const char *name)
@@ -202,18 +219,18 @@ Uni_ret simpl_exp(B_tree_node *root, const char *name)
 
 	char *file_name = create_file_name(name, "_simpl.tex");
 
-	FILE *tex_file = fopen(file_name, "w");
-	if(tex_file == NULL)
-	{
-		//log error
+	WITH_OPEN
+	(
+		file_name, "w", tex_file,
 
-		result.error_code = UNABLE_TO_OPEN_FILE;
-		return result;
-	}
+		init_notations();
 
-	result.arg.node = simplify(root, tex_file);
+		result.arg.node = simplify(root, tex_file);
 
-	fclose(tex_file);
+		tex_notations(tex_file);
+
+		notations_dtor();
+	)
 
 	return result;
 }
