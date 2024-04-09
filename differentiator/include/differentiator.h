@@ -52,16 +52,12 @@ btr_elem_t   eval                 (B_tree_node *node, Labels_w_len *labels_w_len
 
 Uni_ret      create_txt_expression(B_tree_node *root, const char *file_name);
 
-B_tree_node *node_copy            (B_tree_node *node);
-
-B_tree_node *solve_trivial        (B_tree_node *node);
-
-B_tree_node *wrap_consts          (B_tree_node *node);
-
 Uni_ret      simpl_exp            (B_tree_node *root, const char *name);
 
 Uni_ret      diff_exp             (B_tree_node *root, const char *name);
 
 Uni_ret      tex_exp              (B_tree_node *root, const char *name);
+
+bool cmp_nodes(B_tree_node *node_1, B_tree_node *node_2);
 
 #endif

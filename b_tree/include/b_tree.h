@@ -106,5 +106,7 @@ error_t txt_dump        (B_tree_node *root, const char *name);
 
 Uni_ret gr_dump_code_gen(B_tree_node *root, const char *b_tree_name);
 
+bool    cmp_nodes       (B_tree_node *node_1, B_tree_node *node_2);
+
 
 #endif

@@ -294,4 +294,33 @@ error_t txt_dump(struct B_tree_node *root, const char *name)
 // 	return result;
 // }
 
+bool cmp_nodes(B_tree_node *node_1, B_tree_node *node_2)
+{
+	if(node_1 == NULL && node_2 == NULL)
+	{
+		return true;
+	}
 
+	if(node_1 == NULL || node_2 == NULL)
+	{
+		return false;
+	}
+
+	if(	cmp_nodes(node_1->left, node_2->left) &&
+		cmp_nodes(node_1->right, node_2->right) &&
+		(
+			(	(node_1->type == NUM && node_2->type == NUM) &&
+				(!cmp_double(node_1->value.num_value, node_2->value.num_value)	)	) ||
+			(	(node_1->type == OP && node_2->type == OP) &&
+				(node_1->value.op_value == node_2->value.op_value	)	) ||
+			(	(node_1->type == VAR && node_2->type == VAR) &&
+				(!strncmp(node_1->value.var_value, node_2->value.var_value, strlen(node_2->value.var_value))	)	)
+		)	)
+	{
+		return true;
+	}
+	else
+	{
+		return false;
+	}
+}

@@ -756,7 +756,8 @@ Notat_check check_if_notated(B_tree_node *node)
 
 	for(size_t notat_ID = 0; notat_ID < notations.size; notat_ID++)
 	{
-		if(notations.data[notat_ID].node == node)
+		if(notations.data[notat_ID].node == node ||
+			cmp_nodes(notations.data[notat_ID].node, node))
 		{
 			result.notated = true;
 			result.letter  = notations.data[notat_ID].letter;
@@ -806,6 +807,30 @@ size_t manage_notations(B_tree_node *node)
 
 	return size;
 }
+
+struct B_tree_node *node_copy(struct B_tree_node *node)
+{
+	if(node == NULL)
+	{
+		return NULL;
+	}
+
+	struct B_tree_node *copy = (struct B_tree_node *)calloc(1, sizeof(struct B_tree_node));
+
+	if(copy == NULL)
+	{
+		fprintf(stderr, "Unable to allocate memory in %s", __func__);
+		return NULL;
+	}
+
+	copy->left = node_copy(node->left);
+	copy->right = node_copy(node->right);
+	copy->type = node->type;
+	copy->value = node->value;
+
+	return copy;
+}
+
 
 #undef TEX
 #include "undef_DSL.h"

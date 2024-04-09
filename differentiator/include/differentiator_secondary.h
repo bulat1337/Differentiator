@@ -47,5 +47,11 @@ char         set_notation         (B_tree_node *node);
 
 Notat_check  check_if_notated     (B_tree_node *node);
 
+B_tree_node *node_copy            (B_tree_node *node);
+
+B_tree_node *solve_trivial        (B_tree_node *node);
+
+B_tree_node *wrap_consts          (B_tree_node *node);
+
 
 #endif

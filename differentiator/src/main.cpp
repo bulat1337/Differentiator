@@ -6,6 +6,7 @@ int main()
 {
 	// unstable tree
 	// struct B_tree_node *expression = get_gen("x + x + x + x + x + x + x");
+
 	struct B_tree_node *expression = get_gen("sin(5 + ln(x ^ (y + (5 + 4))))");
 	GR_DUMP_CODE_GEN(expression);
 
