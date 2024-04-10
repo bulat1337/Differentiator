@@ -534,18 +534,10 @@ B_tree_node *simplify(B_tree_node *node, FILE *tex_file)
 	node_clone->left  = simplify(node_clone->left, tex_file);
 	node_clone->right = simplify(node_clone->right, tex_file);
 
-	// //if child changed copy the parent
-	// if(change_flag == true)
-	// {
-	// 	printf("child is changed\n");
-	// 	node = node_copy(node);
-	// }
-
 	TRY_TO_SIMPLIFY;
 
 	tex_result(tex_file, node_clone);
 
-	//if changed
 	return node_clone;
 }
 
@@ -702,8 +694,6 @@ char set_notation(B_tree_node *node)
 
 	(notations.size)++;
 
-	printf("%c - %p\n", cur_letter, node);
-
 	return cur_letter;
 }
 
@@ -776,8 +766,6 @@ void notations_dtor()
 	notations.data = NULL;
 
 	notations.size = 0;
-
-	printf("dtored.\n");
 }
 
 size_t manage_notations(B_tree_node *node)
@@ -798,7 +786,6 @@ size_t manage_notations(B_tree_node *node)
 		Notat_check check = check_if_notated(node);
 		if(!check.notated)
 		{
-			printf("cause node_size = %lu\n", size);
 			set_notation(node);
 		}
 

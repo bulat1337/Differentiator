@@ -4,6 +4,9 @@
 #include "b_tree.h"
 #include "recursive_parser.h"
 
+const size_t NOTAT_BOUND         = 5;
+const size_t AMOUNT_OF_NOTATIONS = 26;
+
 #define CALLOC(ptr, amount, type)						\
 	ptr = (type *)calloc(amount, sizeof(type));			\
 	if(ptr == NULL)										\
@@ -17,6 +20,9 @@
 
 #define TEX_EXP(node)\
 	tex_exp(node, #node);
+
+#define TXT_EXP(node)\
+	txt_exp(node, #node);
 
 #define SIMPL_EXP(node)\
 	simpl_exp(node, #node)
@@ -51,6 +57,8 @@ struct Labels_w_len
 btr_elem_t   eval                 (B_tree_node *node, Labels_w_len *labels_w_len);
 
 Uni_ret      create_txt_expression(B_tree_node *root, const char *file_name);
+
+Uni_ret      txt_exp              (B_tree_node *root, const char *name);
 
 Uni_ret      simpl_exp            (B_tree_node *root, const char *name);
 

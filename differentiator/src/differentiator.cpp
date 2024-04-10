@@ -118,17 +118,34 @@ Uni_ret create_txt_expression(struct B_tree_node *root, const char *file_name)
 		return result;
 	}
 
-	struct B_tree_node fictitious_root_parent =
+	fclose(result.arg.file_ptr);
+
+	return result;
+}
+
+Uni_ret txt_exp(B_tree_node *root, const char *name)
+{
+	Uni_ret result =
 	{
-		.type = OP,
-		.value.op_value = DO_NOTHING,
-		.left = root,
-		.right = root,
+		.error_code = ALL_GOOD,
 	};
 
-	print_node(&fictitious_root_parent, RIGHT_CHILD, result.arg.file_ptr);
+	char *file_name = create_file_name(name, ".txt");
 
-	fclose(result.arg.file_ptr);
+	WITH_OPEN
+	(
+		file_name, "w", txt_file,
+
+		struct B_tree_node fictitious_root_parent =
+		{
+			.type = OP,
+			.value.op_value = DO_NOTHING,
+			.left = root,
+			.right = root,
+		};
+
+		print_node(&fictitious_root_parent, RIGHT_CHILD, txt_file);
+	)
 
 	return result;
 }

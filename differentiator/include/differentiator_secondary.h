@@ -3,9 +3,6 @@
 
 #include "differentiator.h"
 
-const size_t NOTAT_BOUND         = 5;
-const size_t AMOUNT_OF_NOTATIONS = 26;
-
 struct Notat_check
 {
 	bool notated;

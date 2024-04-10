@@ -12,17 +12,15 @@ int main()
 
 
 	TEX_EXP(expression);
+	TXT_EXP(expression);
 
 	B_tree_node *differentiated = DIFF_EXP(expression).arg.node;
 	GR_DUMP_CODE_GEN(differentiated);
 
-
-//некорректно определяет размер в симпле
-
 	B_tree_node *simple_exp = SIMPL_EXP(expression).arg.node;
 	GR_DUMP_CODE_GEN(simple_exp);
 
-// 	TXT_DUMP(expression);
+	TXT_DUMP(expression);
 
 
 	return 0;
