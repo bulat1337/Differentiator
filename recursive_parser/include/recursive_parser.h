@@ -8,7 +8,7 @@
 #include "differentiator.h"
 #include "global.h"
 
-struct B_tree_node *get_gen(const char *str);
+struct B_tree_node *parse_expr(const char *str);
 struct B_tree_node *get_num();
 struct B_tree_node *get_add();
 struct B_tree_node *get_mul();

@@ -29,7 +29,7 @@ FLAGS = -D _DEBUG -ggdb3 \
 
 LINK_FLAGS = -fsanitize=address,alignment,bool,bounds,enum,float-cast-overflow,float-divide-by-zero,integer-divide-by-zero,nonnull-attribute,null,return,returns-nonnull-attribute,shift,signed-integer-overflow,undefined,unreachable,vla-bound,vptr
 
-Include = -I../b_tree/include/ -I./include/ -I../recursive_parser/include/ -I../global/include/
+Include = -I../b_tree/include/ -I./include/ -I./src/dsl/ -I../recursive_parser/include/ -I../global/include/
 
 $(TARGET): $(DIF_OBJ)
 	@ $(CC) $(LINK_FLAGS) $^ $(GLOBAL_OBJ) -o $@ -L../libs -lb_tree -lrecursive_parser

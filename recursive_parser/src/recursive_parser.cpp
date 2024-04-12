@@ -60,7 +60,7 @@
 static char *str = NULL;
 static size_t id = 0;
 
-struct B_tree_node *get_gen(const char *expression)
+struct B_tree_node *parse_expr(const char *expression)
 {
 	str = skip_spaces(expression, strlen(expression));
 

@@ -1,14 +1,7 @@
 #include "differentiator.h"
 #include "differentiator_secondary.h"
-#include "def_DSL.h"
 
-#define CALLOC(ptr, amount, type)						\
-	ptr = (type *)calloc(amount, sizeof(type));			\
-	if(ptr == NULL)										\
-	{													\
-		fprintf(stderr, "Unable to allocate"#ptr"\n");	\
-		return UNABLE_TO_ALLOCATE;						\
-	}
+#include "def_glob_dsl.h"
 
 #define PUT_PARENTHESIS_COND\
 		(	(parent->type == OP) &&															\
@@ -171,6 +164,7 @@ struct B_tree_node *get_node(struct B_tree_node *parent, bool is_right_child)
 	{
 		return parent->right;
 	}
+	else
 	{
 		return parent->left;
 	}
@@ -390,6 +384,8 @@ error_t tex_result(FILE *tex_file, B_tree_node *node, Notations *notations)
 	return ALL_GOOD;
 }
 
+#include "def_diff_dsl.h"
+
 struct B_tree_node *diff(struct B_tree_node *node, FILE *tex_file,
 						 bool tex_process, Notations *notations)
 {
@@ -497,6 +493,8 @@ struct B_tree_node *diff(struct B_tree_node *node, FILE *tex_file,
 	return result;
 }
 
+#include "undef_diff_dsl.h"
+
 error_t create_tex_expression(B_tree_node *root, FILE *tex_file, bool do_var_rep,
 							  Notations *notations)
 {
@@ -517,26 +515,26 @@ error_t create_tex_expression(B_tree_node *root, FILE *tex_file, bool do_var_rep
 bool change_flag      = false;
 static bool non_trivial_flag = false;
 
-#define TRY_TO_SIMPLIFY												\
-	simple_node = fold_consts(node_clone);							\
-	if(change_flag == true)											\
-	{																\
+#define TRY_TO_SIMPLIFY															\
+	simple_node = fold_consts(node_clone);										\
+	if(change_flag == true)														\
+	{																			\
 		tex_result(tex_file, simple_node, notations);							\
-		return simple_node;											\
-	}																\
-																	\
-	simple_node = solve_trivial(node_clone);						\
-	if(non_trivial_flag == true)									\
-	{																\
-		simple_node = simpl(simple_node, tex_file, tex_process, notations);	\
+		return simple_node;														\
+	}																			\
+																				\
+	simple_node = solve_trivial(node_clone);									\
+	if(non_trivial_flag == true)												\
+	{																			\
+		simple_node = simpl(simple_node, tex_file, tex_process, notations);		\
 		tex_result(tex_file, simple_node, notations);							\
-		return simple_node;											\
-	}																\
-																	\
-	if(change_flag == true)											\
-	{																\
+		return simple_node;														\
+	}																			\
+																				\
+	if(change_flag == true)														\
+	{																			\
 		tex_result(tex_file, simple_node, notations);							\
-		return simple_node;											\
+		return simple_node;														\
 	}
 
 B_tree_node *simpl(B_tree_node *node, FILE *tex_file,
@@ -600,6 +598,8 @@ B_tree_node *fold_consts(B_tree_node *node)
 		return node;
 	}
 }
+
+#include "def_triv_dsl.h"
 
 B_tree_node *solve_trivial(B_tree_node *node)
 {
@@ -693,6 +693,8 @@ B_tree_node *solve_trivial(B_tree_node *node)
 
 	return node;
 }
+
+#include "undef_triv_dsl.h"
 
 size_t get_node_size(B_tree_node *node, Notations *notations)
 {
@@ -861,5 +863,4 @@ const char *get_phrase(const char *const phrase_pool[], const size_t pool_size)
 }
 
 
-#undef TEX
-#include "undef_DSL.h"
+#include "undef_glob_dsl.h"

@@ -3,28 +3,7 @@
 #include "differentiator.h"
 #include "differentiator_secondary.h"
 
-#include "def_DSL.h"
-
-#define CALLOC(ptr, amount, type)						\
-	ptr = (type *)calloc(amount, sizeof(type));			\
-	if(ptr == NULL)										\
-	{													\
-		fprintf(stderr, "Unable to allocate"#ptr"\n");	\
-		return UNABLE_TO_ALLOCATE;						\
-	}
-
-#define FILE_PTR_CHECK(ptr)								\
-	{													\
-		if(ptr == NULL)									\
-		{												\
-			fprintf(stderr, "Unable to open"#ptr"\n");	\
-														\
-			result.arg.node   = NULL;					\
-			result.error_code = UNABLE_TO_OPEN_FILE;	\
-														\
-			return result;								\
-		}												\
-	}
+#include "def_glob_dsl.h"
 
 btr_elem_t eval(struct B_tree_node *node, struct Labels_w_len *labels_w_len)
 {
@@ -43,7 +22,7 @@ btr_elem_t eval(struct B_tree_node *node, struct Labels_w_len *labels_w_len)
 		return get_var_value(node->value.var_value, labels_w_len);
 	}
 
-	btr_elem_t left_node_value  = eval(node->left, labels_w_len);
+	btr_elem_t left_node_value  = eval(node->left,  labels_w_len);
 	btr_elem_t right_node_value = eval(node->right, labels_w_len);
 
 	switch(node->value.op_value)
@@ -123,10 +102,10 @@ Uni_ret txt_expr(B_tree_node *root, const char *name)
 
 		struct B_tree_node fictitious_root_parent =
 		{
-			.type = OP,
+			.type           = OP,
 			.value.op_value = DO_NOTHING,
-			.left = root,
-			.right = root,
+			.left           = root,
+			.right          = root,
 		};
 
 		print_node(&fictitious_root_parent, RIGHT_CHILD, txt_file);
@@ -135,29 +114,29 @@ Uni_ret txt_expr(B_tree_node *root, const char *name)
 	return result;
 }
 
-#define PROC_EXPR(mode, root, name, tex_process)					\
-	if(tex_process)													\
-	{																\
-		char *file_name = create_file_name(name, "_"#mode".tex");	\
-																	\
-		WITH_OPEN													\
-		(															\
-			file_name, "w", tex_file,								\
-																	\
-			Notations notations = {};								\
-																	\
-			init_notations(&notations);							\
-																	\
+#define PROC_EXPR(mode, root, name, tex_process)								\
+	if(tex_process)																\
+	{																			\
+		char *file_name = create_file_name(name, "_"#mode".tex");				\
+																				\
+		WITH_OPEN																\
+		(																		\
+			file_name, "w", tex_file,											\
+																				\
+			Notations notations = {};											\
+																				\
+			init_notations(&notations);											\
+																				\
 			result.arg.node = mode(root, tex_file, tex_process, &notations);	\
-																	\
+																				\
 			tex_notations(tex_file, &notations);								\
-																	\
-			notations_dtor(&notations);										\
-		)															\
-	}																\
-	else															\
-	{																\
-		result.arg.node = mode(root, NULL, tex_process, NULL);			\
+																				\
+			notations_dtor(&notations);											\
+		)																		\
+	}																			\
+	else																		\
+	{																			\
+		result.arg.node = mode(root, NULL, tex_process, NULL);					\
 	}
 
 Uni_ret diff_expr(B_tree_node *root, const char *name, bool tex_process)
@@ -223,4 +202,4 @@ Uni_ret simpl_expr(B_tree_node *root, const char *name, bool tex_process)
 }
 
 
-#include "undef_DSL.h"
+#include "undef_glob_dsl.h"
