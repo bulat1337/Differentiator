@@ -165,7 +165,7 @@ struct B_tree_node *get_node(struct B_tree_node *parent, bool is_right_child)
 }
 
 void tex_node_print(struct B_tree_node *parent, bool is_right_child,
-					FILE *tex_file, bool do_var_rep)
+					FILE *tex_file, bool do_var_rep, Notations *notations)
 {
 	struct B_tree_node *node = get_node(parent, is_right_child);
 
@@ -189,7 +189,7 @@ void tex_node_print(struct B_tree_node *parent, bool is_right_child,
 	if(do_var_rep)
 	{
 		//check if there is notation
-		Notat_check check = check_if_notated(node);
+		Notat_check check = check_if_notated(node, notations);
 		if(check.notated)
 		{
 			TEX("%c", check.letter);
@@ -212,7 +212,7 @@ void tex_node_print(struct B_tree_node *parent, bool is_right_child,
 
 	if(	!(	(node->type == OP) && (node->value.op_value == DIV)	)	)
 	{
-		tex_node_print(node, LEFT_CHILD, tex_file, true);
+		tex_node_print(node, LEFT_CHILD, tex_file, true, notations);
 	}
 
 	switch(node->type)
@@ -297,16 +297,16 @@ void tex_node_print(struct B_tree_node *parent, bool is_right_child,
 	if(	(	(node->type == OP) && (node->value.op_value == DIV)	))
 	{
 		TEX("{");
-		tex_node_print(node, LEFT_CHILD, tex_file, true);
+		tex_node_print(node, LEFT_CHILD, tex_file, true, notations);
 		TEX("}");
 
 		TEX("{");
-		tex_node_print(node, RIGHT_CHILD, tex_file, true);
+		tex_node_print(node, RIGHT_CHILD, tex_file, true, notations);
 		TEX("}");
 	}
 	else
 	{
-    	tex_node_print(node, RIGHT_CHILD, tex_file, true);
+    	tex_node_print(node, RIGHT_CHILD, tex_file, true, notations);
 	}
 
 	if(	(parent->type == OP) &&
@@ -339,43 +339,43 @@ btr_elem_t get_var_value(const char *var_name, const struct Labels_w_len *labels
 	return NAN;
 }
 
-error_t tex_src_diff_node(FILE *tex_file, B_tree_node *node)
+error_t tex_src_diff_node(FILE *tex_file, B_tree_node *node, Notations *notations)
 {
-	manage_notations(node);
+	manage_notations(node, notations);
 
 	TEX("Let's solve:\n");
 	TEX("$$ d(");
-	create_tex_expression(node, tex_file, true);
+	create_tex_expression(node, tex_file, true, notations);
 	TEX(") $$\n");
 
 	return ALL_GOOD;
 }
 
-error_t tex_src_simpl_node(FILE *tex_file, B_tree_node *node)
+error_t tex_src_simpl_node(FILE *tex_file, B_tree_node *node, Notations *notations)
 {
-	manage_notations(node);
+	manage_notations(node, notations);
 
 	TEX("Let's simplify:\n");
 	TEX("$$ ");
-	create_tex_expression(node, tex_file, true);
+	create_tex_expression(node, tex_file, true, notations);
 	TEX(" $$\n");
 
 	return ALL_GOOD;
 }
 
-error_t tex_result(FILE *tex_file, B_tree_node *node)
+error_t tex_result(FILE *tex_file, B_tree_node *node, Notations *notations)
 {
-	manage_notations(node);
+	manage_notations(node, notations);
 
 	fprintf(tex_file, "result:\n$$ ");
-	create_tex_expression(node, tex_file, true);
+	create_tex_expression(node, tex_file, true, notations);
 	fprintf(tex_file, " $$\n");
 
 	return ALL_GOOD;
 }
 
 struct B_tree_node *diff(struct B_tree_node *node, FILE *tex_file,
-								  bool tex_process)
+						 bool tex_process, Notations *notations)
 {
 	if(node == NULL)
 	{
@@ -385,7 +385,7 @@ struct B_tree_node *diff(struct B_tree_node *node, FILE *tex_file,
 
 	if(tex_process)
 	{
-		tex_src_diff_node(tex_file, node);
+		tex_src_diff_node(tex_file, node, notations);
 	}
 
 	B_tree_node *result = NULL;
@@ -475,13 +475,14 @@ struct B_tree_node *diff(struct B_tree_node *node, FILE *tex_file,
 
 	if(tex_process)
 	{
-		tex_result(tex_file, result);
+		tex_result(tex_file, result, notations);
 	}
 
 	return result;
 }
 
-error_t create_tex_expression(struct B_tree_node *root, FILE *tex_file, bool do_var_rep)
+error_t create_tex_expression(struct B_tree_node *root, FILE *tex_file, bool do_var_rep,
+							  Notations *notations)
 {
 	struct B_tree_node fictitious_root_parent =
 	{
@@ -491,7 +492,8 @@ error_t create_tex_expression(struct B_tree_node *root, FILE *tex_file, bool do_
 		.right = root,
 	};
 
-	tex_node_print(&fictitious_root_parent, RIGHT_CHILD, tex_file, do_var_rep);
+	tex_node_print(&fictitious_root_parent, RIGHT_CHILD, tex_file,
+				   do_var_rep, notations);
 
 	return ALL_GOOD;
 }
@@ -503,25 +505,26 @@ static bool non_trivial_flag = false;
 	simple_node = wrap_consts(node_clone);							\
 	if(change_flag == true)											\
 	{																\
-		tex_result(tex_file, simple_node);							\
+		tex_result(tex_file, simple_node, notations);							\
 		return simple_node;											\
 	}																\
 																	\
 	simple_node = solve_trivial(node_clone);						\
 	if(non_trivial_flag == true)									\
 	{																\
-		simple_node = simpl(simple_node, tex_file, tex_process);	\
-		tex_result(tex_file, simple_node);							\
+		simple_node = simpl(simple_node, tex_file, tex_process, notations);	\
+		tex_result(tex_file, simple_node, notations);							\
 		return simple_node;											\
 	}																\
 																	\
 	if(change_flag == true)											\
 	{																\
-		tex_result(tex_file, simple_node);							\
+		tex_result(tex_file, simple_node, notations);							\
 		return simple_node;											\
 	}
 
-B_tree_node *simpl(B_tree_node *node, FILE *tex_file, bool tex_process)
+B_tree_node *simpl(B_tree_node *node, FILE *tex_file,
+				   bool tex_process, Notations *notations)
 {
 	B_tree_node *node_clone = node_copy(node);
 
@@ -534,21 +537,21 @@ B_tree_node *simpl(B_tree_node *node, FILE *tex_file, bool tex_process)
 
 	if(tex_process)
 	{
-		tex_src_simpl_node(tex_file, node_clone);
+		tex_src_simpl_node(tex_file, node_clone, notations);
 	}
 
 	TRY_TO_SIMPLIFY;
 
 	change_flag = false;
 
-	node_clone->left  = simpl(node_clone->left,  tex_file, tex_process);
-	node_clone->right = simpl(node_clone->right, tex_file, tex_process);
+	node_clone->left  = simpl(node_clone->left,  tex_file, tex_process, notations);
+	node_clone->right = simpl(node_clone->right, tex_file, tex_process, notations);
 
 	TRY_TO_SIMPLIFY;
 
 	if(tex_process)
 	{
-		tex_result(tex_file, node_clone);
+		tex_result(tex_file, node_clone, notations);
 	}
 
 	return node_clone;
@@ -677,79 +680,75 @@ B_tree_node *solve_trivial(B_tree_node *node)
 	return node;
 }
 
-size_t get_node_size(B_tree_node *node)
+size_t get_node_size(B_tree_node *node, Notations *notations)
 {
 	if(node == NULL)
 	{
 		return 0;
 	}
 
-	if(check_if_notated(node).notated)
+	if(check_if_notated(node, notations).notated)
 	{
 		return 1;
 	}
 
 	size_t size = 1;
 
-	size += get_node_size(node->left);
-	size += get_node_size(node->right);
+	size += get_node_size(node->left,  notations);
+	size += get_node_size(node->right, notations);
 
 	return size;
 }
 
-char set_notation(B_tree_node *node)
+char set_notation(B_tree_node *node, Notations *notations)
 {
-	size_t cur_ID = notations.size;
+	size_t cur_ID = notations->size;
 	char cur_letter = 'A' + (char)cur_ID;
 
-	notations.data[cur_ID].node = node;
-	notations.data[cur_ID].letter = cur_letter;
+	notations->data[cur_ID].node = node;
+	notations->data[cur_ID].letter = cur_letter;
 
-	(notations.size)++;
+	(notations->size)++;
 
 	return cur_letter;
 }
 
-error_t init_notations()
+error_t init_notations(Notations *notations)
 {
-	CALLOC(notations.data, AMOUNT_OF_NOTATIONS, Notation);
+	CALLOC(notations->data, AMOUNT_OF_NOTATIONS, Notation);
 
-	for(size_t notat_ID = 0; notat_ID < notations.size; notat_ID++)
+	for(size_t notat_ID = 0; notat_ID < notations->size; notat_ID++)
 	{
-		notations.data[notat_ID].node   = NULL;
-		notations.data[notat_ID].letter = 0;
+		notations->data[notat_ID].node   = NULL;
+		notations->data[notat_ID].letter = 0;
 	}
 
-	notations.size = 0;
+	notations->size = 0;
 
 	return ALL_GOOD;
 }
 
-void tex_notations(FILE *tex_file)
+void tex_notations(FILE *tex_file, Notations *notations)
 {
-	if(notations.size == 0)
+	if(notations->size == 0)
 	{
 		return;
 	}
 
 	TEX("Where:\\newline ");
 
-	for(size_t notat_ID = 0; notat_ID < notations.size; notat_ID++)
+	for(size_t notat_ID = 0; notat_ID < notations->size; notat_ID++)
 	{
-		TEX("%c = ", notations.data[notat_ID].letter);
+		TEX("%c = ", notations->data[notat_ID].letter);
 		TEX("$$ ");
-		/* происодит повторная нотация узлов
-		   когда мы поднимаемся на уровень выше должны использоваться
-		   те переменные которые мы ввели. сейчас decition if notate происходит
-		   на каждом уровне игнорируя предыдущие нотации, основываясь только на размере дерева
-		   нужно больше условий для ввода переменных*/
-		create_tex_expression(notations.data[notat_ID].node, tex_file, false);
+		create_tex_expression(notations->data[notat_ID].node, tex_file,
+							  false, notations);
 		TEX(" $$\n");
 	}
 }
 
 //true if there is notation
-Notat_check check_if_notated(B_tree_node *node)
+Notat_check check_if_notated(B_tree_node *node, Notations *notations)
 {
 	Notat_check result =
 	{
@@ -757,13 +756,13 @@ Notat_check check_if_notated(B_tree_node *node)
 		.letter  = 0,
 	};
 
-	for(size_t notat_ID = 0; notat_ID < notations.size; notat_ID++)
+	for(size_t notat_ID = 0; notat_ID < notations->size; notat_ID++)
 	{
-		if(notations.data[notat_ID].node == node ||
-			cmp_nodes(notations.data[notat_ID].node, node))
+		if(notations->data[notat_ID].node == node ||
+			cmp_nodes(notations->data[notat_ID].node, node))
 		{
 			result.notated = true;
-			result.letter  = notations.data[notat_ID].letter;
+			result.letter  = notations->data[notat_ID].letter;
 
 			return result;
 		}
@@ -772,16 +771,16 @@ Notat_check check_if_notated(B_tree_node *node)
 	return result;
 }
 
-void notations_dtor()
+void notations_dtor(Notations *notations)
 {
-	free(notations.data);
+	free(notations->data);
 
-	notations.data = NULL;
+	notations->data = NULL;
 
-	notations.size = 0;
+	notations->size = 0;
 }
 
-size_t manage_notations(B_tree_node *node)
+size_t manage_notations(B_tree_node *node, Notations *notations)
 {
 	if(node == NULL)
 	{
@@ -790,16 +789,16 @@ size_t manage_notations(B_tree_node *node)
 
 	size_t size = 1;
 
-	size += manage_notations(node->left);
-	size += manage_notations(node->right);
+	size += manage_notations(node->left, notations);
+	size += manage_notations(node->right, notations);
 
 	if(size > NOTAT_BOUND)
 	{
 		//check if there is notation
-		Notat_check check = check_if_notated(node);
+		Notat_check check = check_if_notated(node, notations);
 		if(!check.notated)
 		{
-			set_notation(node);
+			set_notation(node, notations);
 		}
 
 		return 1;

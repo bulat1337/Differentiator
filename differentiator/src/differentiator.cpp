@@ -5,8 +5,6 @@
 
 #include "def_DSL.h"
 
-Notations notations = {};
-
 #define FILE_PTR_CHECK(ptr)								\
 	{													\
 		if(ptr == NULL)									\
@@ -102,7 +100,7 @@ btr_elem_t eval(struct B_tree_node *node, struct Labels_w_len *labels_w_len)
 
 }
 
-Uni_ret txt_exp(B_tree_node *root, const char *name)
+Uni_ret txt_expr(B_tree_node *root, const char *name)
 {
 	Uni_ret result =
 	{
@@ -138,21 +136,23 @@ Uni_ret txt_exp(B_tree_node *root, const char *name)
 		(															\
 			file_name, "w", tex_file,								\
 																	\
-			init_notations();										\
+			Notations notations = {};								\
 																	\
-			result.arg.node = mode(root, tex_file, tex_process);	\
+			init_notations(&notations);							\
 																	\
-			tex_notations(tex_file);								\
+			result.arg.node = mode(root, tex_file, tex_process, &notations);	\
 																	\
-			notations_dtor();										\
+			tex_notations(tex_file, &notations);								\
+																	\
+			notations_dtor(&notations);										\
 		)															\
 	}																\
 	else															\
 	{																\
-		result.arg.node = diff(root, NULL, tex_process);			\
+		result.arg.node = mode(root, NULL, tex_process, NULL);			\
 	}
 
-Uni_ret diff_exp(B_tree_node *root, const char *name, bool tex_process)
+Uni_ret diff_expr(B_tree_node *root, const char *name, bool tex_process)
 {
 	Uni_ret result =
 	{
@@ -164,7 +164,7 @@ Uni_ret diff_exp(B_tree_node *root, const char *name, bool tex_process)
 	return result;
 }
 
-Uni_ret tex_exp(B_tree_node *root, const char *name)
+Uni_ret tex_expr(B_tree_node *root, const char *name)
 {
 	Uni_ret result =
 	{
@@ -177,23 +177,25 @@ Uni_ret tex_exp(B_tree_node *root, const char *name)
 	(
 		file_name, "w", tex_file,
 
-		init_notations();
+		Notations notations = {};
 
-		manage_notations(root);
+		init_notations(&notations);
+
+		manage_notations(root, &notations);
 
 		TEX("$$");
-		create_tex_expression(root, tex_file, true);
+		create_tex_expression(root, tex_file, true, &notations);
 		TEX("$$");
 
-		tex_notations(tex_file);
+		tex_notations(tex_file, &notations);
 
-		notations_dtor();
+		notations_dtor(&notations);
 	)
 
 	return result;
 }
 
-Uni_ret simpl_exp(B_tree_node *root, const char *name, bool tex_process)
+Uni_ret simpl_expr(B_tree_node *root, const char *name, bool tex_process)
 {
 	Uni_ret result =
 	{

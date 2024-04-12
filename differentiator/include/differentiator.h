@@ -15,23 +15,23 @@ const size_t AMOUNT_OF_NOTATIONS = 26;
 		return UNABLE_TO_ALLOCATE;						\
 	}
 
-#define DIFF_EXP(node)\
-	diff_exp(node, #node)
+#define DIFF_EXPR(node)\
+	diff_expr(node, #node)
 
-#define DIFF_EXP_TEX(node, tex_process)\
-	diff_exp(node, #node, tex_process)
+#define DIFF_EXPR_TEX(node, tex_process)\
+	diff_expr(node, #node, tex_process)
 
-#define TEX_EXP(node)\
-	tex_exp(node, #node);
+#define TEX_EXPR(node)\
+	tex_expr(node, #node);
 
-#define TXT_EXP(node)\
-	txt_exp(node, #node);
+#define TXT_EXPR(node)\
+	txt_expr(node, #node);
 
-#define SIMPL_EXP(node)\
-	simpl_exp(node, #node)\
+#define SIMPL_EXPR(node)\
+	simpl_expr(node, #node)\
 
-#define SIMPL_EXP_TEX(node, tex_process)\
-	simpl_exp(node, #node, tex_process)
+#define SIMPL_EXPR_TEX(node, tex_process)\
+	simpl_expr(node, #node, tex_process)
 
 struct Notation
 {
@@ -44,9 +44,6 @@ struct Notations
 	size_t    size;
 	Notation *data;
 };
-
-extern Notations notations;
-
 
 struct Var_label
 {
@@ -62,12 +59,12 @@ struct Labels_w_len
 
 btr_elem_t eval      (B_tree_node *node, Labels_w_len *labels_w_len);
 
-Uni_ret    txt_exp   (B_tree_node *root, const char *name);
+Uni_ret    txt_expr   (B_tree_node *root, const char *name);
 
-Uni_ret    simpl_exp (B_tree_node *root, const char *name, bool tex = false);
+Uni_ret    simpl_expr (B_tree_node *root, const char *name, bool tex = false);
 
-Uni_ret    diff_exp  (B_tree_node *root, const char *name, bool tex = false);
+Uni_ret    diff_expr  (B_tree_node *root, const char *name, bool tex = false);
 
-Uni_ret    tex_exp   (B_tree_node *root, const char *name);
+Uni_ret    tex_expr   (B_tree_node *root, const char *name);
 
 #endif
