@@ -9,6 +9,51 @@ struct Notat_check
 	char letter;
 };
 
+struct Notation
+{
+	char        letter;
+	B_tree_node *node;
+};
+
+struct Notations
+{
+	size_t    size;
+	Notation *data;
+};
+
+const size_t NOTAT_BOUND         = 5;
+const size_t AMOUNT_OF_NOTATIONS = 26;
+const size_t DIFF_TEX_LIMIT      = 2;
+const size_t SIMPL_TEX_LIMIT     = 2;
+
+const size_t DIFF_POOL_SIZE      = 9;
+const size_t SIMPL_POOL_SIZE     = 8;
+
+const char * const diff_phrase_pool[] =
+{
+	"Easy to differentiate:\n",
+	"Let's do some kindergarden math:\n",
+	"I solved this one in 0.0000000000000021 seconds:\n",
+	"Bruh you could've solved this one by yourself:\n",
+	"This one is obvius:\n",
+	"Come on bro this is so easy:\n",
+	"I solved this one in 0.0000000000000042 seconds:\n",
+	"Bro kids in USSR were solving such differentials in mind:\n",
+	"I solved this one in 0.0000000000000046 seconds:\n",
+};
+
+const char * const simpl_phrase_pool[] =
+{
+	"It's as big as ur mom, lets try to simpify:\n",
+	"It's as big as ur dad, lets try to simpify:\n",
+	"It's as big as ur granny, lets try to simpify:\n",
+	"It's as big as ur grandpa, lets try to simpify:\n",
+	"It's as big as ur sister, lets try to simpify:\n",
+	"It's as big as ur brother, lets try to simpify:\n",
+	"It's as big as ur cousin, lets try to simpify:\n",
+	"It's as big as you, lets try to simpify:\n",
+};
+
 void         print_node           (B_tree_node *parent, bool is_right_child, FILE *expression);
 
 void         tex_node_print       (B_tree_node *parent, bool is_right_child,
@@ -57,7 +102,10 @@ B_tree_node *node_copy            (B_tree_node *node);
 
 B_tree_node *solve_trivial        (B_tree_node *node);
 
-B_tree_node *wrap_consts          (B_tree_node *node);
+B_tree_node *fold_consts          (B_tree_node *node);
+
+const char  *get_phrase           (const char *const phrase_pool[],
+								   const size_t pool_size);
 
 
 #endif

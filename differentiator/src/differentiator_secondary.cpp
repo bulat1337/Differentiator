@@ -2,6 +2,14 @@
 #include "differentiator_secondary.h"
 #include "def_DSL.h"
 
+#define CALLOC(ptr, amount, type)						\
+	ptr = (type *)calloc(amount, sizeof(type));			\
+	if(ptr == NULL)										\
+	{													\
+		fprintf(stderr, "Unable to allocate"#ptr"\n");	\
+		return UNABLE_TO_ALLOCATE;						\
+	}
+
 #define PUT_PARENTHESIS_COND\
 		(	(parent->type == OP) &&															\
 			(	(parent->value.op_value == LN) ||											\
@@ -347,7 +355,9 @@ error_t tex_src_diff_node(FILE *tex_file, B_tree_node *node, Notations *notation
 {
 	manage_notations(node, notations);
 
-	TEX("Let's solve:\n");
+	const char *phrase = get_phrase(diff_phrase_pool, DIFF_POOL_SIZE);
+
+	TEX("%s", phrase);
 	TEX("$$ d(");
 	create_tex_expression(node, tex_file, true, notations);
 	TEX(") $$\n");
@@ -359,10 +369,12 @@ error_t tex_src_simpl_node(FILE *tex_file, B_tree_node *node, Notations *notatio
 {
 	manage_notations(node, notations);
 
-	TEX("Let's simplify:\n");
-	TEX("$$ ");
+	const char *phrase = get_phrase(simpl_phrase_pool, SIMPL_POOL_SIZE);
+
+	TEX("%s", phrase);
+	TEX("$$ d(");
 	create_tex_expression(node, tex_file, true, notations);
-	TEX(" $$\n");
+	TEX(") $$\n");
 
 	return ALL_GOOD;
 }
@@ -387,7 +399,7 @@ struct B_tree_node *diff(struct B_tree_node *node, FILE *tex_file,
 		return NULL;
 	}
 
-	if(tex_process)
+	if((tex_process) && (get_node_size(node, notations) > DIFF_TEX_LIMIT))
 	{
 		tex_src_diff_node(tex_file, node, notations);
 	}
@@ -477,7 +489,7 @@ struct B_tree_node *diff(struct B_tree_node *node, FILE *tex_file,
 		}
 	}
 
-	if(tex_process)
+	if((tex_process) && (get_node_size(node, notations) > DIFF_TEX_LIMIT))
 	{
 		tex_result(tex_file, result, notations);
 	}
@@ -485,7 +497,7 @@ struct B_tree_node *diff(struct B_tree_node *node, FILE *tex_file,
 	return result;
 }
 
-error_t create_tex_expression(struct B_tree_node *root, FILE *tex_file, bool do_var_rep,
+error_t create_tex_expression(B_tree_node *root, FILE *tex_file, bool do_var_rep,
 							  Notations *notations)
 {
 	struct B_tree_node fictitious_root_parent =
@@ -502,11 +514,11 @@ error_t create_tex_expression(struct B_tree_node *root, FILE *tex_file, bool do_
 	return ALL_GOOD;
 }
 
-static bool change_flag      = false;
+bool change_flag      = false;
 static bool non_trivial_flag = false;
 
 #define TRY_TO_SIMPLIFY												\
-	simple_node = wrap_consts(node_clone);							\
+	simple_node = fold_consts(node_clone);							\
 	if(change_flag == true)											\
 	{																\
 		tex_result(tex_file, simple_node, notations);							\
@@ -539,21 +551,19 @@ B_tree_node *simpl(B_tree_node *node, FILE *tex_file,
 
 	B_tree_node *simple_node = NULL;
 
-	if(tex_process)
+	if((tex_process) && (get_node_size(node, notations) > SIMPL_TEX_LIMIT))
 	{
 		tex_src_simpl_node(tex_file, node_clone, notations);
 	}
 
 	TRY_TO_SIMPLIFY;
 
-	change_flag = false;
-
 	node_clone->left  = simpl(node_clone->left,  tex_file, tex_process, notations);
 	node_clone->right = simpl(node_clone->right, tex_file, tex_process, notations);
 
 	TRY_TO_SIMPLIFY;
 
-	if(tex_process)
+	if((tex_process) && (get_node_size(node, notations) > SIMPL_TEX_LIMIT))
 	{
 		tex_result(tex_file, node_clone, notations);
 	}
@@ -563,7 +573,7 @@ B_tree_node *simpl(B_tree_node *node, FILE *tex_file,
 
 #undef TRY_TO_SIMPLIFY
 
-B_tree_node *wrap_consts(B_tree_node *node)
+B_tree_node *fold_consts(B_tree_node *node)
 {
 	change_flag = false;
 
@@ -832,6 +842,22 @@ struct B_tree_node *node_copy(struct B_tree_node *node)
 	copy->value = node->value;
 
 	return copy;
+}
+
+const char *get_phrase(const char *const phrase_pool[], const size_t pool_size)
+{
+	static size_t cur_phrase = 0;
+
+	const char *phrase = phrase_pool[cur_phrase];
+
+	cur_phrase++;
+
+	if(cur_phrase > pool_size - 1)
+	{
+		cur_phrase = 0;
+	}
+
+	return phrase;
 }
 
 

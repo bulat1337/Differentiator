@@ -5,6 +5,14 @@
 
 #include "def_DSL.h"
 
+#define CALLOC(ptr, amount, type)						\
+	ptr = (type *)calloc(amount, sizeof(type));			\
+	if(ptr == NULL)										\
+	{													\
+		fprintf(stderr, "Unable to allocate"#ptr"\n");	\
+		return UNABLE_TO_ALLOCATE;						\
+	}
+
 #define FILE_PTR_CHECK(ptr)								\
 	{													\
 		if(ptr == NULL)									\
@@ -195,6 +203,8 @@ Uni_ret tex_expr(B_tree_node *root, const char *name)
 	return result;
 }
 
+extern bool change_flag;
+
 Uni_ret simpl_expr(B_tree_node *root, const char *name, bool tex_process)
 {
 	Uni_ret result =
@@ -202,7 +212,12 @@ Uni_ret simpl_expr(B_tree_node *root, const char *name, bool tex_process)
 		.error_code = ALL_GOOD,
 	};
 
-	PROC_EXPR(simpl, root, name, tex_process)
+
+	do
+	{
+		change_flag = false;
+		PROC_EXPR(simpl, root, name, tex_process)
+	}while(change_flag);
 
 	return result;
 }

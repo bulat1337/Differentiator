@@ -4,17 +4,6 @@
 #include "b_tree.h"
 #include "recursive_parser.h"
 
-const size_t NOTAT_BOUND         = 5;
-const size_t AMOUNT_OF_NOTATIONS = 26;
-
-#define CALLOC(ptr, amount, type)						\
-	ptr = (type *)calloc(amount, sizeof(type));			\
-	if(ptr == NULL)										\
-	{													\
-		fprintf(stderr, "Unable to allocate"#ptr"\n");	\
-		return UNABLE_TO_ALLOCATE;						\
-	}
-
 #define DIFF_EXPR(node)\
 	diff_expr(node, #node)
 
@@ -32,18 +21,6 @@ const size_t AMOUNT_OF_NOTATIONS = 26;
 
 #define SIMPL_EXPR_TEX(node, tex_process)\
 	simpl_expr(node, #node, tex_process)
-
-struct Notation
-{
-	char        letter;
-	B_tree_node *node;
-};
-
-struct Notations
-{
-	size_t    size;
-	Notation *data;
-};
 
 struct Var_label
 {
