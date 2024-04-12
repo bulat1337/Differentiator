@@ -67,64 +67,7 @@ void print_node(struct B_tree_node *parent, bool is_right_child, FILE *expressio
 	{
 		case OP:
 		{
-			switch(node->value.op_value)
-			{
-				case ADD:
-				{
-					WRITE_IN_EXPRESSION_FILE("+ ");
-					break;
-				}
-				case SUB:
-				{
-					WRITE_IN_EXPRESSION_FILE("- ");
-					break;
-				}
-				case MUL:
-				{
-					WRITE_IN_EXPRESSION_FILE("* ");
-					break;
-				}
-				case DIV:
-				{
-					WRITE_IN_EXPRESSION_FILE("/ ");
-					break;
-				}
-				case POW:
-				{
-					WRITE_IN_EXPRESSION_FILE("^ ");
-					break;
-				}
-				case LN:
-				{
-					WRITE_IN_EXPRESSION_FILE("ln");
-					break;
-				}
-				case SIN:
-				{
-					WRITE_IN_EXPRESSION_FILE("sin");
-					break;
-				}
-				case COS:
-				{
-					WRITE_IN_EXPRESSION_FILE("cos");
-					break;
-				}
-				case SQRT:
-				{
-					WRITE_IN_EXPRESSION_FILE("sqrt");
-					break;
-				}
-				case DO_NOTHING:
-				{
-					;
-				}
-				default:
-				{
-					fprintf(stderr, "Unknown operation %d in %s[%d]\n",
-							node->value.op_value, __func__, __LINE__);
-				}
-			}
-
+			write_op(expression_file, node->value.op_value);
 			break;
 		}
 		case NUM:
@@ -149,9 +92,70 @@ void print_node(struct B_tree_node *parent, bool is_right_child, FILE *expressio
 	{
     	WRITE_IN_EXPRESSION_FILE(") ");
 	}
-
-	#undef WRITE_IN_EXPRESSION_FILE
 }
+
+void write_op(FILE *expression_file, Ops op_value)
+{
+	switch(op_value)
+	{
+		case ADD:
+		{
+			WRITE_IN_EXPRESSION_FILE("+ ");
+			break;
+		}
+		case SUB:
+		{
+			WRITE_IN_EXPRESSION_FILE("- ");
+			break;
+		}
+		case MUL:
+		{
+			WRITE_IN_EXPRESSION_FILE("* ");
+			break;
+		}
+		case DIV:
+		{
+			WRITE_IN_EXPRESSION_FILE("/ ");
+			break;
+		}
+		case POW:
+		{
+			WRITE_IN_EXPRESSION_FILE("^ ");
+			break;
+		}
+		case LN:
+		{
+			WRITE_IN_EXPRESSION_FILE("ln");
+			break;
+		}
+		case SIN:
+		{
+			WRITE_IN_EXPRESSION_FILE("sin");
+			break;
+		}
+		case COS:
+		{
+			WRITE_IN_EXPRESSION_FILE("cos");
+			break;
+		}
+		case SQRT:
+		{
+			WRITE_IN_EXPRESSION_FILE("sqrt");
+			break;
+		}
+		case DO_NOTHING:
+		{
+			;
+		}
+		default:
+		{
+			fprintf(stderr, "Unknown operation %d in %s[%d]\n",
+					op_value, __func__, __LINE__);
+		}
+	}
+}
+
+#undef WRITE_IN_EXPRESSION_FILE
 
 struct B_tree_node *get_node(struct B_tree_node *parent, bool is_right_child)
 {

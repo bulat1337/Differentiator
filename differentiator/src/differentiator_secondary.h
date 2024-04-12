@@ -19,6 +19,8 @@ void         tex_notations        (FILE *tex_file, Notations *notations);
 
 void         notations_dtor       (Notations *notations);
 
+void         write_op             (FILE *expression_file, Ops op_value);
+
 B_tree_node *get_node             (B_tree_node *parent, bool is_right_child);
 
 btr_elem_t   get_var_value        (const char *var_name, const Labels_w_len *labels_w_len);
