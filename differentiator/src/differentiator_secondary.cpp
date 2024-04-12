@@ -374,7 +374,8 @@ error_t tex_result(FILE *tex_file, B_tree_node *node)
 	return ALL_GOOD;
 }
 
-struct B_tree_node *differentiate(struct B_tree_node *node, FILE *tex_file)
+struct B_tree_node *diff(struct B_tree_node *node, FILE *tex_file,
+								  bool tex_process)
 {
 	if(node == NULL)
 	{
@@ -382,7 +383,10 @@ struct B_tree_node *differentiate(struct B_tree_node *node, FILE *tex_file)
 		return NULL;
 	}
 
-	tex_src_diff_node(tex_file, node);
+	if(tex_process)
+	{
+		tex_src_diff_node(tex_file, node);
+	}
 
 	B_tree_node *result = NULL;
 
@@ -469,7 +473,10 @@ struct B_tree_node *differentiate(struct B_tree_node *node, FILE *tex_file)
 		}
 	}
 
-	tex_result(tex_file, result);
+	if(tex_process)
+	{
+		tex_result(tex_file, result);
+	}
 
 	return result;
 }
@@ -492,29 +499,29 @@ error_t create_tex_expression(struct B_tree_node *root, FILE *tex_file, bool do_
 static bool change_flag      = false;
 static bool non_trivial_flag = false;
 
-#define TRY_TO_SIMPLIFY									\
-	simple_node = wrap_consts(node_clone);				\
-	if(change_flag == true)								\
-	{													\
-		tex_result(tex_file, simple_node);				\
-		return simple_node;								\
-	}													\
-														\
-	simple_node = solve_trivial(node_clone);				\
-	if(non_trivial_flag == true)						\
-	{													\
-		simple_node = simplify(simple_node, tex_file);	\
-		tex_result(tex_file, simple_node);				\
-		return simple_node;								\
-	}													\
-														\
-	if(change_flag == true)								\
-	{													\
-		tex_result(tex_file, simple_node);				\
-		return simple_node;								\
+#define TRY_TO_SIMPLIFY												\
+	simple_node = wrap_consts(node_clone);							\
+	if(change_flag == true)											\
+	{																\
+		tex_result(tex_file, simple_node);							\
+		return simple_node;											\
+	}																\
+																	\
+	simple_node = solve_trivial(node_clone);						\
+	if(non_trivial_flag == true)									\
+	{																\
+		simple_node = simpl(simple_node, tex_file, tex_process);	\
+		tex_result(tex_file, simple_node);							\
+		return simple_node;											\
+	}																\
+																	\
+	if(change_flag == true)											\
+	{																\
+		tex_result(tex_file, simple_node);							\
+		return simple_node;											\
 	}
 
-B_tree_node *simplify(B_tree_node *node, FILE *tex_file)
+B_tree_node *simpl(B_tree_node *node, FILE *tex_file, bool tex_process)
 {
 	B_tree_node *node_clone = node_copy(node);
 
@@ -525,18 +532,24 @@ B_tree_node *simplify(B_tree_node *node, FILE *tex_file)
 
 	B_tree_node *simple_node = NULL;
 
-	tex_src_simpl_node(tex_file, node_clone);
+	if(tex_process)
+	{
+		tex_src_simpl_node(tex_file, node_clone);
+	}
 
 	TRY_TO_SIMPLIFY;
 
 	change_flag = false;
 
-	node_clone->left  = simplify(node_clone->left, tex_file);
-	node_clone->right = simplify(node_clone->right, tex_file);
+	node_clone->left  = simpl(node_clone->left,  tex_file, tex_process);
+	node_clone->right = simpl(node_clone->right, tex_file, tex_process);
 
 	TRY_TO_SIMPLIFY;
 
-	tex_result(tex_file, node_clone);
+	if(tex_process)
+	{
+		tex_result(tex_file, node_clone);
+	}
 
 	return node_clone;
 }

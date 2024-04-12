@@ -18,6 +18,9 @@ const size_t AMOUNT_OF_NOTATIONS = 26;
 #define DIFF_EXP(node)\
 	diff_exp(node, #node)
 
+#define DIFF_EXP_TEX(node, tex_process)\
+	diff_exp(node, #node, tex_process)
+
 #define TEX_EXP(node)\
 	tex_exp(node, #node);
 
@@ -25,7 +28,10 @@ const size_t AMOUNT_OF_NOTATIONS = 26;
 	txt_exp(node, #node);
 
 #define SIMPL_EXP(node)\
-	simpl_exp(node, #node)
+	simpl_exp(node, #node)\
+
+#define SIMPL_EXP_TEX(node, tex_process)\
+	simpl_exp(node, #node, tex_process)
 
 struct Notation
 {
@@ -54,18 +60,14 @@ struct Labels_w_len
 	size_t length;
 };
 
-btr_elem_t   eval                 (B_tree_node *node, Labels_w_len *labels_w_len);
+btr_elem_t eval      (B_tree_node *node, Labels_w_len *labels_w_len);
 
-Uni_ret      create_txt_expression(B_tree_node *root, const char *file_name);
+Uni_ret    txt_exp   (B_tree_node *root, const char *name);
 
-Uni_ret      txt_exp              (B_tree_node *root, const char *name);
+Uni_ret    simpl_exp (B_tree_node *root, const char *name, bool tex = false);
 
-Uni_ret      simpl_exp            (B_tree_node *root, const char *name);
+Uni_ret    diff_exp  (B_tree_node *root, const char *name, bool tex = false);
 
-Uni_ret      diff_exp             (B_tree_node *root, const char *name);
-
-Uni_ret      tex_exp              (B_tree_node *root, const char *name);
-
-bool cmp_nodes(B_tree_node *node_1, B_tree_node *node_2);
+Uni_ret    tex_exp   (B_tree_node *root, const char *name);
 
 #endif

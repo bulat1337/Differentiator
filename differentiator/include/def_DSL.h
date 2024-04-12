@@ -4,13 +4,13 @@
 /*---------->>          ~~DIFFERENTIATE~~           <<----------*/
 
 #define dL														\
-	differentiate(node->left, tex_file)
+	diff(node->left, tex_file, tex_process)
 
 #define cL														\
 	node_copy(node->left)
 
 #define dR														\
-	differentiate(node->right, tex_file)
+	diff(node->right, tex_file, tex_process)
 
 #define cR														\
 	node_copy(node->right)

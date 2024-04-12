@@ -12,7 +12,7 @@ all:
 dot: $(PNG)
 
 %.png: %.dot
-	@dot -Tpng $< -o $@ $(FLAGS) -Gdpi=100
+	dot -Tpng $< -o $@ -Gdpi=100
 
 clean:
 	@rm $(JUNK); for dir in $(SUBDIRS); do $(MAKE) clean -C $$dir; done

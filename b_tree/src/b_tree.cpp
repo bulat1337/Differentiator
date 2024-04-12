@@ -158,27 +158,18 @@ Uni_ret gr_dump_code_gen(B_tree_node *root, const char *b_tree_name)
 
 	WRITE_TO_DUMP_FILE("}");
 
-
-//why donesn't work \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
-
-	// char *gr_dump_gen_cmd = (char *)calloc(GR_DUMP_GEN_CMD_SIZE, sizeof(char));
-	// if(gr_dump_gen_cmd == NULL)
-	// {
-	// 	result.error_code = UNABLE_TO_ALLOCATE;
-	// 	fprintf(stderr, "Unable to allocate\n");
-	// 	return result;
-	// }
-	// snprintf(gr_dump_gen_cmd, GR_DUMP_GEN_CMD_SIZE,
-	// 	"dot -Tpng %s -o %s.png -Gdpi=100", b_tree_name, b_tree_name);
-	// system(gr_dump_gen_cmd);
-	// free(gr_dump_gen_cmd);
-
-
-
 	#undef WRITE_TO_DUMP_FILE
 
 	free(nd_description.label);
 	fclose(result.arg.file_ptr);
+
+	result.error_code = compile_dot(b_tree_name);
+
+	if(result.error_code != ALL_GOOD)
+	{
+		return result;
+	}
+
 
 	return result;
 }
@@ -293,6 +284,8 @@ error_t txt_dump(struct B_tree_node *root, const char *name)
 //
 // 	return result;
 // }
+
+//оптимизация
 
 bool cmp_nodes(B_tree_node *node_1, B_tree_node *node_2)
 {

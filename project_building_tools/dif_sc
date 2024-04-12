@@ -2,4 +2,3 @@
 make clean
 make
 ../executables/dif.out
-make dot

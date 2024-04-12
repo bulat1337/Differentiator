@@ -102,27 +102,6 @@ btr_elem_t eval(struct B_tree_node *node, struct Labels_w_len *labels_w_len)
 
 }
 
-Uni_ret create_txt_expression(struct B_tree_node *root, const char *file_name)
-{
-	Uni_ret result =
-	{
-		.error_code = ALL_GOOD,
-		.arg.file_ptr = fopen(file_name, "w"),
-	};
-
-	if(result.arg.file_ptr == NULL)
-	{
-		perror("ERROR:");
-		result.error_code = UNABLE_TO_OPEN_FILE;
-
-		return result;
-	}
-
-	fclose(result.arg.file_ptr);
-
-	return result;
-}
-
 Uni_ret txt_exp(B_tree_node *root, const char *name)
 {
 	Uni_ret result =
@@ -150,27 +129,37 @@ Uni_ret txt_exp(B_tree_node *root, const char *name)
 	return result;
 }
 
-Uni_ret diff_exp(B_tree_node *root, const char *name)
+#define PROC_EXPR(mode, root, name, tex_process)					\
+	if(tex_process)													\
+	{																\
+		char *file_name = create_file_name(name, "_"#mode".tex");	\
+																	\
+		WITH_OPEN													\
+		(															\
+			file_name, "w", tex_file,								\
+																	\
+			init_notations();										\
+																	\
+			result.arg.node = mode(root, tex_file, tex_process);	\
+																	\
+			tex_notations(tex_file);								\
+																	\
+			notations_dtor();										\
+		)															\
+	}																\
+	else															\
+	{																\
+		result.arg.node = diff(root, NULL, tex_process);			\
+	}
+
+Uni_ret diff_exp(B_tree_node *root, const char *name, bool tex_process)
 {
 	Uni_ret result =
 	{
 		.error_code = ALL_GOOD,
 	};
 
-	char *file_name = create_file_name(name, "_diff.tex");
-
-	WITH_OPEN
-	(
-		file_name, "w", tex_file,
-
-		init_notations();
-
-		result.arg.node = differentiate(root, tex_file);
-
-		tex_notations(tex_file);
-
-		notations_dtor();
-	)
+	PROC_EXPR(diff, root, name, tex_process)
 
 	return result;
 }
@@ -204,27 +193,14 @@ Uni_ret tex_exp(B_tree_node *root, const char *name)
 	return result;
 }
 
-Uni_ret simpl_exp(B_tree_node *root, const char *name)
+Uni_ret simpl_exp(B_tree_node *root, const char *name, bool tex_process)
 {
 	Uni_ret result =
 	{
 		.error_code = ALL_GOOD,
 	};
 
-	char *file_name = create_file_name(name, "_simpl.tex");
-
-	WITH_OPEN
-	(
-		file_name, "w", tex_file,
-
-		init_notations();
-
-		result.arg.node = simplify(root, tex_file);
-
-		tex_notations(tex_file);
-
-		notations_dtor();
-	)
+	PROC_EXPR(simpl, root, name, tex_process)
 
 	return result;
 }

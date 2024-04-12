@@ -24,4 +24,6 @@ error_t      gr_dump_node          (B_tree_node *node, Node_charachteristics *nd
 
 char        *get_operation_token   (enum Ops op_type);
 
+error_t compile_dot(const char *b_tree_name);
+
 #endif

@@ -244,3 +244,22 @@ void txt_dump_node(struct B_tree_node *node, FILE *console_dump_file)
 	txt_dump_node(node->left,  console_dump_file);
 	txt_dump_node(node->right, console_dump_file);
 }
+
+error_t compile_dot(const char *b_tree_name)
+{
+	char *gr_dump_gen_cmd = (char *)calloc(GR_DUMP_GEN_CMD_SIZE, sizeof(char));
+
+	if(gr_dump_gen_cmd == NULL)
+	{
+		fprintf(stderr, "Unable to allocate\n");
+		return UNABLE_TO_ALLOCATE;
+	}
+	snprintf(gr_dump_gen_cmd, GR_DUMP_GEN_CMD_SIZE,
+		"dot -Tpng %s.dot -o %s.png -Gdpi=100\n", b_tree_name, b_tree_name);
+
+	system(gr_dump_gen_cmd);
+
+	free(gr_dump_gen_cmd);
+
+	return ALL_GOOD;
+}
