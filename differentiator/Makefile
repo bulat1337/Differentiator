@@ -4,11 +4,6 @@ PATH_DIF_SRC    = ./src/
 DIF_SRC = $(wildcard $(PATH_DIF_SRC)*.cpp)
 DIF_OBJ = $(patsubst $(PATH_DIF_SRC)%.cpp, $(PATH_DIF_OBJ)%.o, $(DIF_SRC))
 
-PATH_GLOBAL_OBJ = ../obj/global_obj/
-PATH_GLOBAL_SRC     = ../global/src/
-GLOBAL_SRC = $(wildcard $(PATH_GLOBAL_SRC)*.cpp)
-GLOBAL_OBJ = $(patsubst $(PATH_GLOBAL_SRC)%.cpp, $(PATH_GLOBAL_OBJ)%.o, $(GLOBAL_SRC))
-
 TARGET = ../executables/dif.out
 
 CC = g++
@@ -29,10 +24,10 @@ FLAGS = -D _DEBUG -ggdb3 \
 
 LINK_FLAGS = -fsanitize=address,alignment,bool,bounds,enum,float-cast-overflow,float-divide-by-zero,integer-divide-by-zero,nonnull-attribute,null,return,returns-nonnull-attribute,shift,signed-integer-overflow,undefined,unreachable,vla-bound,vptr
 
-Include = -I../b_tree/include/ -I./include/ -I./src/dsl/ -I../recursive_parser/include/ -I../global/include/
+Include = -I../B_tree/include/ -I./include/ -I./src/dsl/ -I../Recursive_parser/include/ -I../Global/include/
 
 $(TARGET): $(DIF_OBJ)
-	@ $(CC) $(LINK_FLAGS) $^ $(GLOBAL_OBJ) -o $@ -L../libs -lb_tree -lrecursive_parser
+	@ $(CC) $(LINK_FLAGS) $^ -o $@ -L../libs -lb_tree -lrecursive_parser -lglobal
 
 $(PATH_DIF_OBJ)%.o: $(PATH_DIF_SRC)%.cpp
 	@ $(CC) -c $< -o $@ $(FLAGS) $(Include)

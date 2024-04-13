@@ -25,7 +25,8 @@ LINK_FLAGS = -fsanitize=address,alignment,bool,bounds,enum,float-cast-overflow,f
 
 Include = -I./include/
 
-all: $(GLOBAL_OBJ)
+$(PATH_LIB)libglobal.a: $(GLOBAL_OBJ)
+	@ ar rvs $@ $(GLOBAL_OBJ)
 
 $(PATH_GLOBAL_OBJ)%.o: $(PATH_GLOBAL_SRC)%.cpp
 	@ $(CC) -c $< -o $@ $(FLAGS) $(Include)

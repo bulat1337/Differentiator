@@ -3,11 +3,6 @@ PATH_R_PARSER_SRC = ./src/
 R_PARSER_SRC = $(wildcard $(PATH_R_PARSER_SRC)*.cpp)
 R_PARSER_OBJ = $(patsubst $(PATH_R_PARSER_SRC)%.cpp, $(PATH_R_PARSER_OBJ)%.o, $(R_PARSER_SRC))
 
-PATH_GLOBAL_OBJ = ../obj/global_obj/
-PATH_GLOBAL_SRC     = ../global/src/
-GLOBAL_SRC = $(wildcard $(PATH_GLOBAL_SRC)*.cpp)
-GLOBAL_OBJ = $(patsubst $(PATH_GLOBAL_SRC)%.cpp, $(PATH_GLOBAL_OBJ)%.o, $(GLOBAL_SRC))
-
 PATH_LIB = ../libs/
 
 CC = g++
@@ -29,9 +24,9 @@ FLAGS = -D _DEBUG -ggdb3 \
 LINK_FLAGS = -fsanitize=address,alignment,bool,bounds,enum,float-cast-overflow,float-divide-by-zero,integer-divide-by-zero,nonnull-attribute,null,return,returns-nonnull-attribute,shift,signed-integer-overflow,undefined,unreachable,vla-bound,vptr
 
 Include = -I../b_tree/include/ -I../differentiator/include/ -I./include/ -I../global/include/
-# каким образом я использую b_tree либу не прилинковывая ее?????
+
 $(PATH_LIB)librecursive_parser.a: $(R_PARSER_OBJ)
-	@ ar rvs $@ $(R_PARSER_OBJ) $(GLOBAL_OBJ)
+	@ ar rvs $@ $(R_PARSER_OBJ)
 
 $(PATH_R_PARSER_OBJ)%.o: $(PATH_R_PARSER_SRC)%.cpp
 	@ $(CC) -c $< -o $@ $(FLAGS) $(Include)
