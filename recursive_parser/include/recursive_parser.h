@@ -5,7 +5,6 @@
 	write_log("parse_log.txt", __VA_ARGS__);
 
 #include "b_tree.h"
-#include "differentiator.h"
 #include "global.h"
 
 struct B_tree_node *parse_expr(const char *str);

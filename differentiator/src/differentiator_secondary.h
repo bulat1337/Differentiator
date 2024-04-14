@@ -2,6 +2,7 @@
 #define DIFFERENTIATOR_SECONDARY
 
 #include "differentiator.h"
+#include "global.h"
 
 struct Notat_check
 {

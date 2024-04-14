@@ -2,6 +2,7 @@
 #define RECURSIVE_PARSER_SECONDARY_H
 
 #include "recursive_parser.h"
+#include "global.h"
 
 size_t count_symbols   (const char *cur_str);
 
